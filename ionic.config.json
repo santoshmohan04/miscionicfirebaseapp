@@ -1,0 +1,7 @@
+{
+  "name": "miscionicfirestore",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
