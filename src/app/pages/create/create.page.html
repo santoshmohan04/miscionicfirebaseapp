@@ -1,0 +1,39 @@
+<ion-content padding>
+  <ion-text class="ion-text-center"> 
+  <h1 >Add a Song to the List</h1>
+</ion-text>
+  <form [formGroup]="createSongForm" (ngSubmit)="createSong()">
+    <ion-item>
+      <ion-label position="stacked">Song Name</ion-label>
+      <ion-input formControlName="songName" type="text" placeholder="What's this song called?">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Artist Name</ion-label>
+      <ion-input formControlName="artistName" type="text" placeholder="Who sings this song?">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Album Name</ion-label>
+      <ion-input formControlName="albumName" type="text" placeholder="What's the album's name?">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Song Description</ion-label>
+      <ion-textarea
+        formControlName="songDescription"
+        type="text"
+        placeholder="What's this song about?"
+        rows="4"
+      >
+      </ion-textarea>
+    </ion-item>
+
+    <ion-button expand="block" type="submit" [disabled]="!createSongForm.valid">
+      Add Song
+    </ion-button>
+  </form>
+</ion-content>
