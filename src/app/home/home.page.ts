@@ -19,7 +19,7 @@ import { addOutline } from 'ionicons/icons';
 export class HomePage {
   songList: Observable<Song[]> = this.firestoreService.getSongList();
 
-  constructor(private firestoreService: FirestoreService) {
+  constructor(private readonly firestoreService: FirestoreService) {
     addIcons({ addOutline });
   }
 }

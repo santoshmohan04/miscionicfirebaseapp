@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { IonInput, IonContent, IonTextarea, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, IonButton, IonText } from '@ionic/angular/standalone';
-import { LoadingController, AlertController } from '@ionic/angular';
+import { IonInput, IonContent, IonTextarea, IonItem, IonLabel, IonButton, IonText, LoadingController, AlertController } from '@ionic/angular/standalone';
+// import { LoadingController, AlertController } from '@ionic/angular/standalone';
 import { FirestoreService } from '../../services/data/firestore.service';
 import { Router } from '@angular/router';
 
@@ -11,17 +11,17 @@ import { Router } from '@angular/router';
   templateUrl: './create.page.html',
   styleUrls: ['./create.page.scss'],
   standalone: true,
-  imports: [IonText, CommonModule, FormsModule, ReactiveFormsModule, IonText, IonInput, IonTextarea, IonButton, IonLabel, IonItem, IonContent, IonHeader, IonTitle, IonToolbar]
+  imports: [IonText, CommonModule, FormsModule, ReactiveFormsModule, IonText, IonInput, IonTextarea, IonButton, IonLabel, IonItem, IonContent]
 })
 export class CreatePage implements OnInit {
   createSongForm!: FormGroup;
 
   constructor(
-    private readonly loadingCtrl: LoadingController,
+  private readonly loadingCtrl: LoadingController,
   private readonly alertCtrl: AlertController,
-  private firestoreService: FirestoreService,
-  private formBuilder: FormBuilder,
-  private router: Router
+  private readonly firestoreService: FirestoreService,
+  private readonly formBuilder: FormBuilder,
+  private readonly router: Router
   ) { }
 
   ngOnInit() {

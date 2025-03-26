@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Song } from '../../models/song.interface';
 import { FirestoreService } from '../../services/data/firestore.service';
-import { AlertController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton, IonBackButton } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton, IonBackButton, AlertController } from '@ionic/angular/standalone';
 import { BehaviorSubject } from 'rxjs';
 
 @Component({
@@ -20,10 +19,10 @@ export class DetailPage implements OnInit {
   song: BehaviorSubject<Song | null> = new BehaviorSubject<Song | null>(null);
 
   constructor(
-    private firestoreService: FirestoreService,
-    private route: ActivatedRoute,
-    private alertController: AlertController,
-    private router: Router
+    private readonly firestoreService: FirestoreService,
+    private readonly route: ActivatedRoute,
+    private readonly alertController: AlertController,
+    private readonly router: Router
   ) { }
 
   ngOnInit() {

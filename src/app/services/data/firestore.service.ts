@@ -7,7 +7,7 @@ import { Song } from '../../models/song.interface';
   providedIn: 'root'
 })
 export class FirestoreService {
-  private songCollection: CollectionReference<Song>;
+  private readonly songCollection: CollectionReference<Song>;
 
   constructor(private readonly firestore: Firestore) {
     this.songCollection = collection(this.firestore, 'songList') as CollectionReference<Song>;
