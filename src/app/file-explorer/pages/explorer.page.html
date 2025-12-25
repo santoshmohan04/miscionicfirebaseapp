@@ -24,49 +24,47 @@
 <ion-content>
 
   <ion-list>
-    <ion-item
-      *ngFor="let item of (files$ | async)"
-      (click)="open(item)"
-      (press)="longPress(item)"
-      lines="full">
-
-      <ion-icon
-        [name]="item.isFolder ? 'folder' : (item.type === 'audio' ? 'musical-notes' : 'videocam')"
-        slot="start">
-      </ion-icon>
-
-      <ion-label>
-        <h2>{{ item.name }}</h2>
-        <p>{{ item.meta }}</p>
-      </ion-label>
-
-      <ion-checkbox
-        *ngIf="item.selectable"
-        slot="end"
-        [checked]="item.selected"
-        (ionChange)="toggleSelection(item)">
-      </ion-checkbox>
-
-      <ion-button fill="clear" slot="end">
-        <ion-icon name="ellipsis-vertical"></ion-icon>
-      </ion-button>
-
-    </ion-item>
+    @for (item of (files$ | async); track item) {
+      <ion-item
+        (click)="open(item)"
+        (press)="longPress(item)"
+        lines="full">
+        <ion-icon
+          [name]="item.isFolder ? 'folder' : (item.type === 'audio' ? 'musical-notes' : 'videocam')"
+          slot="start">
+        </ion-icon>
+        <ion-label>
+          <h2>{{ item.name }}</h2>
+          <p>{{ item.meta }}</p>
+        </ion-label>
+        @if (item.selectable) {
+          <ion-checkbox
+            slot="end"
+            [checked]="item.selected"
+            (ionChange)="toggleSelection(item)">
+          </ion-checkbox>
+        }
+        <ion-button fill="clear" slot="end">
+          <ion-icon name="ellipsis-vertical"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
   </ion-list>
 
 </ion-content>
 
 <!-- Multi Select Footer -->
-<ion-footer *ngIf="hasSelection$ | async">
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-button (click)="clearSelection()">✕</ion-button>
-    </ion-buttons>
-
-    <ion-buttons slot="end">
-      <ion-button (click)="move()">Move</ion-button>
-      <ion-button (click)="copy()">Copy</ion-button>
-      <ion-button color="danger" (click)="delete()">Delete</ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-footer>
+@if (hasSelection$ | async) {
+  <ion-footer>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-button (click)="clearSelection()">✕</ion-button>
+      </ion-buttons>
+      <ion-buttons slot="end">
+        <ion-button (click)="move()">Move</ion-button>
+        <ion-button (click)="copy()">Copy</ion-button>
+        <ion-button color="danger" (click)="delete()">Delete</ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-footer>
+}
