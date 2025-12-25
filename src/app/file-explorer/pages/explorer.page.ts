@@ -5,11 +5,10 @@ import { FileItem } from './explorer-model';
 import { IonHeader, IonToolbar, IonButtons, IonTitle, IonLabel, IonItem, IonIcon, IonContent, IonButton, IonFooter, IonCheckbox, IonList } from "@ionic/angular/standalone";
 
 @Component({
-  selector: 'app-explorer',
-  templateUrl: './explorer.page.html',
-  styleUrls: ['./explorer.page.scss'],
-  standalone: true,
-  imports: [IonList, IonCheckbox, IonFooter, IonButton, IonContent, IonIcon, IonItem, IonLabel, IonTitle, IonButtons, IonToolbar, IonHeader],
+    selector: 'app-explorer',
+    templateUrl: './explorer.page.html',
+    styleUrls: ['./explorer.page.scss'],
+    imports: [IonList, IonCheckbox, IonFooter, IonButton, IonContent, IonIcon, IonItem, IonLabel, IonTitle, IonButtons, IonToolbar, IonHeader]
 })
 export class ExplorerPage implements OnInit {
 
