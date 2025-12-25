@@ -1,18 +1,21 @@
-// explorer.state.ts
-import { FileItem } from '../pages/explorer-model';
+import { ExplorerViewMode, FileItem } from '../pages/explorer-model';
 
 export interface ExplorerState {
-  currentPath: string;
   files: FileItem[];
+  currentPath: string;
+  pathStack: string[];
+  viewMode: ExplorerViewMode;
+  selectionMode: boolean;
   selectedItems: FileItem[];
   loading: boolean;
-  selectionMode: boolean;
 }
 
 export const initialExplorerState: ExplorerState = {
-  currentPath: '/',
   files: [],
+  currentPath: '/',
+  pathStack: [],
+  viewMode: 'local',
+  selectionMode: false,
   selectedItems: [],
   loading: false,
-  selectionMode: false,
 };

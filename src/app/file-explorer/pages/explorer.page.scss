@@ -1,25 +1,91 @@
+/* ===============================
+   HEADER & SEGMENT (TOP BAR)
+   =============================== */
+
+ion-toolbar[color='primary'] {
+  --color: #ffffff;
+}
+
+ion-title {
+  font-weight: 600;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+/* Segment inside header */
+.header-segment {
+  --background: transparent;
+  --indicator-color: #ffffff;
+  --color: rgba(255, 255, 255, 0.7);
+}
+
+ion-segment-button {
+  --color-checked: #ffffff;
+  --color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+/* ===============================
+   CATEGORY GRID VIEW
+   =============================== */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  padding: 18px;
+}
+
+.category-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px 10px;
+  border-radius: 14px;
+
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.category-tile:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.category-icon {
+  font-size: 44px;
+  margin-bottom: 10px;
+  color: var(--ion-color-primary);
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+}
+
+/* ===============================
+   LIST VIEW (LOCAL / RECENT)
+   =============================== */
+
 .file-item {
   --min-height: 68px;
   --padding-start: 12px;
   transition: background-color 0.15s ease-in-out;
 }
 
-/* Selection mode active */
-.file-item.selection-mode {
-  --background: transparent;
-}
-
-/* Selected row highlight */
+/* Selection mode background */
 .file-item.selected {
-  --background: rgba(0, 122, 255, 0.12); // iOS-like blue
+  --background: rgba(0, 122, 255, 0.12);
 }
 
-/* Icon emphasis when selected */
-.file-item.selected .file-type-icon {
-  transform: scale(1.05);
-}
-
-/* Icon base */
+/* File icons */
 .file-type-icon {
   font-size: 28px;
 }
@@ -39,38 +105,37 @@ ion-icon[name='videocam-outline'] {
   color: var(--ion-color-tertiary);
 }
 
+/* Documents */
+ion-icon[name='document-outline'],
+ion-icon[name='document-text-outline'] {
+  color: var(--ion-color-medium);
+}
+
 /* File text */
 .file-name {
   font-weight: 600;
+  font-size: 15px;
 }
 
 .file-meta {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: var(--ion-color-medium);
 }
 
-/* Breadcrumb */
-.breadcrumb-bar {
-  --min-height: 36px;
-}
-
-.breadcrumb-text {
-  font-size: 0.8rem;
-  color: var(--ion-color-medium);
-  padding-left: 16px;
-}
-
-/* Smooth checkbox appearance */
+/* Checkbox spacing */
 ion-checkbox {
   margin-inline-start: 8px;
 }
 
-ion-title {
-  font-weight: 600;
-}
+/* ===============================
+   FOOTER ACTION BAR
+   =============================== */
 
-/* Footer actions */
 ion-footer ion-toolbar {
   --padding-start: 8px;
   --padding-end: 8px;
+}
+
+ion-button[disabled] {
+  opacity: 0.4;
 }

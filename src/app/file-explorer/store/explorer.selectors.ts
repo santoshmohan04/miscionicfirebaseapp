@@ -5,32 +5,60 @@ import { ExplorerState } from './explorer.state';
 export const selectExplorerState =
   createFeatureSelector<ExplorerState>('explorer');
 
+/* =======================
+   BASIC STATE
+   ======================= */
+
 export const selectFiles = createSelector(
   selectExplorerState,
-  state => state.files
+  (state) => state.files
 );
 
 export const selectCurrentPath = createSelector(
   selectExplorerState,
-  state => state.currentPath
+  (state) => state.currentPath
 );
 
-export const selectHasSelection = createSelector(
+export const selectViewMode = createSelector(
   selectExplorerState,
-  state => state.selectedItems.length > 0
+  (state) => state.viewMode
+);
+
+export const selectLoading = createSelector(
+  selectExplorerState,
+  (state) => state.loading
+);
+
+/* =======================
+   SELECTION
+   ======================= */
+
+export const selectSelectionMode = createSelector(
+  selectExplorerState,
+  (state) => state.selectionMode
 );
 
 export const selectSelectedItems = createSelector(
   selectExplorerState,
-  state => state.selectedItems
-);
-
-export const selectSelectionMode = createSelector(
-  selectExplorerState,
-  state => state.selectionMode
+  (state) => state.selectedItems
 );
 
 export const selectSelectedCount = createSelector(
+  selectSelectedItems,
+  (items) => items.length
+);
+
+export const selectHasSelection = createSelector(
+  selectSelectedCount,
+  (count) => count > 0
+);
+
+export const selectHasAnySelection = createSelector(
+  selectHasSelection,
+  (has) => has
+);
+
+export const selectBreadcrumbs = createSelector(
   selectExplorerState,
-  state => state.files.filter(f => f.selected).length
+  (state) => state.pathStack
 );

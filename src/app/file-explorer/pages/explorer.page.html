@@ -1,19 +1,22 @@
 <ion-header>
-  <ion-toolbar>
+  <!-- ================= HEADER ================= -->
+  <ion-toolbar color="primary">
     <ion-buttons slot="start">
-      <ion-button *ngIf="selectionMode$ | async" (click)="clearSelection()">
-        Cancel
+      <!-- Back arrow -->
+      <ion-button
+        *ngIf="isInsideStorage$ | async"
+        fill="clear"
+        (click)="goBack()"
+      >
+        <ion-icon name="arrow-back-outline"></ion-icon>
       </ion-button>
 
-      <ion-menu-button *ngIf="!(selectionMode$ | async)"></ion-menu-button>
+      <!-- Hamburger -->
+      <ion-menu-button *ngIf="!(isInsideStorage$ | async)"></ion-menu-button>
     </ion-buttons>
 
-    <ion-title>
-      <ng-container *ngIf="(selectionMode$ | async); else normalTitle">
-        {{ selectedCount$ | async }} selected
-      </ng-container>
-
-      <ng-template #normalTitle> File Explorer </ng-template>
+    <ion-title class="header-title">
+      {{ headerTitle$ | async }}
     </ion-title>
 
     <ion-buttons slot="end">
@@ -23,75 +26,158 @@
     </ion-buttons>
   </ion-toolbar>
 
-  <!-- Breadcrumb placeholder (logic later) -->
-  <ion-toolbar class="breadcrumb-bar">
-    <ion-label class="breadcrumb-text"> {{ currentPath$ | async }} </ion-label>
+  <!-- ================= TABS ================= -->
+  <ion-toolbar color="primary">
+    <ion-segment
+      class="header-segment"
+      [value]="viewMode$ | async"
+      (ionChange)="changeView($event.detail.value)"
+    >
+      <ion-segment-button value="category">
+        <ion-label>Category</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="recent">
+        <ion-label>Recent</ion-label>
+      </ion-segment-button>
+
+      <ion-segment-button value="local">
+        <ion-label>Local</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+
+  <!-- ================= BREADCRUMBS ================= -->
+  <ion-toolbar
+    class="breadcrumb-bar"
+    *ngIf="(breadcrumbs$ | async)?.length"
+  >
+    <ion-buttons>
+      <ng-container
+        *ngFor="let crumb of breadcrumbs$ | async; let i = index; let last = last"
+      >
+        <ion-button fill="clear" (click)="navigateToCrumb(i)">
+          {{ crumb }}
+        </ion-button>
+
+        <ion-icon
+          *ngIf="!last"
+          name="chevron-forward-outline"
+          class="breadcrumb-separator"
+        ></ion-icon>
+      </ng-container>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-  <ion-list lines="full">
-    <ion-item
-      #fileItem
-      *ngFor="let item of (files$ | async)"
-      class="file-item ion-activatable"
-      [class.selected]="item.selected"
-  [class.selection-mode]="selectionMode$ | async"
-      (click)="open(item)"
-    >
-      <ion-ripple-effect></ion-ripple-effect>
+  <!-- ================= CATEGORY GRID ================= -->
+  <ng-container *ngIf="(viewMode$ | async) === 'category'; else listView">
+    <div class="category-grid">
+      <div
+        class="category-tile"
+        *ngFor="let item of (files$ | async)"
+        (click)="open(item)"
+      >
+        <ion-icon
+          class="category-icon"
+          [name]="
+            item.category === 'pictures' ? 'image-outline' :
+            item.category === 'audio' ? 'musical-notes-outline' :
+            item.category === 'video' ? 'videocam-outline' :
+            item.category === 'documents' ? 'document-text-outline' :
+            item.category === 'zip' ? 'archive-outline' :
+            item.category === 'apps' ? 'apps-outline' :
+            'folder-outline'
+          "
+        ></ion-icon>
 
-      <!-- Leading Icon (Ionic 8 correct icons) -->
-      <ion-icon
-        slot="start"
-        class="file-type-icon"
-        [name]="
-        item.isFolder
-          ? 'folder-outline'
-          : item.type === 'audio'
-          ? 'musical-notes-outline'
-          : item.type === 'video'
-          ? 'videocam-outline'
-          : 'document-outline'
-      "
-      ></ion-icon>
+        <div class="category-name">{{ item.name }}</div>
+      </div>
+    </div>
+  </ng-container>
 
-      <!-- File Info -->
-      <ion-label>
-        <h2 class="file-name">{{ item.name }}</h2>
-        <p class="file-meta">{{ item.isFolder ? 'Folder' : item.meta }}</p>
-      </ion-label>
+  <!-- ================= LIST VIEW ================= -->
+  <ng-template #listView>
+    <ion-list lines="full">
+      <ion-item
+        #fileItem
+        *ngFor="let item of (files$ | async)"
+        class="file-item ion-activatable"
+        [class.selected]="item.selected"
+        (click)="open(item)"
+      >
+        <ion-ripple-effect></ion-ripple-effect>
 
-      <!-- Selection Checkbox -->
-<ion-checkbox
-  *ngIf="selectionMode$ | async"
-  slot="end"
-  [checked]="item.selected"
-  (ionClick)="$event.stopPropagation(); toggleSelection(item)"
-></ion-checkbox>
+        <ion-icon
+          slot="start"
+          class="file-type-icon"
+          [name]="
+            item.isFolder ? 'folder-outline' :
+            item.type === 'audio' ? 'musical-notes-outline' :
+            item.type === 'video' ? 'videocam-outline' :
+            'document-outline'
+          "
+        ></ion-icon>
 
-      <!-- Chevron -->
-      <ion-icon
-  *ngIf="!(selectionMode$ | async)"
-  slot="end"
-  name="chevron-forward-outline"
-  color="medium"
-></ion-icon>
-    </ion-item>
-  </ion-list>
+        <ion-label>
+          <h2 class="file-name">{{ item.name }}</h2>
+          <p class="file-meta">{{ item.meta }}</p>
+        </ion-label>
+
+        <!-- Checkbox only if selectable -->
+        <ion-checkbox
+          *ngIf="(selectionMode$ | async) && item.selectable"
+          slot="end"
+          [checked]="item.selected"
+          (ionClick)="$event.stopPropagation(); toggleSelection(item)"
+        ></ion-checkbox>
+
+        <!-- Chevron when not selecting -->
+        <ion-icon
+          *ngIf="!(selectionMode$ | async)"
+          slot="end"
+          name="chevron-forward-outline"
+          color="medium"
+        ></ion-icon>
+      </ion-item>
+    </ion-list>
+  </ng-template>
 </ion-content>
 
-<!-- Selection Action Bar -->
-<ion-footer *ngIf="hasSelection$ | async">
-  <ion-toolbar color="light">
+<!-- ================= FOOTER ACTIONS ================= -->
+<ion-footer
+  *ngIf="
+    (selectionMode$ | async) &&
+    (viewMode$ | async) !== 'category' &&
+    (viewMode$ | async) !== 'recent'
+  "
+>
+  <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="clearSelection()"> Cancel </ion-button>
+      <ion-button (click)="clearSelection()">Cancel</ion-button>
     </ion-buttons>
 
     <ion-buttons slot="end">
-      <ion-button>Move</ion-button>
-      <ion-button>Copy</ion-button>
-      <ion-button color="danger" (click)="deleteSelected()">
+      <ion-button
+        [disabled]="!(hasAnySelection$ | async)"
+        (click)="move()"
+      >
+        Move
+      </ion-button>
+
+      <ion-button
+        [disabled]="!(hasAnySelection$ | async)"
+        (click)="copy()"
+      >
+        Copy
+      </ion-button>
+
+      <ion-button
+        color="danger"
+        [disabled]="!(hasAnySelection$ | async)"
+        (click)="deleteSelected()"
+      >
         Delete
       </ion-button>
     </ion-buttons>

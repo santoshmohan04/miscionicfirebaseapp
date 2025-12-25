@@ -3,10 +3,16 @@ import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   folderOutline,
+  imageOutline,
   musicalNotesOutline,
   videocamOutline,
-  documentOutline,
+  documentTextOutline,
+  archiveOutline,
+  appsOutline,
+  searchOutline,
   chevronForwardOutline,
+  menuOutline,
+  arrowBackOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -21,10 +27,16 @@ export class AppComponent {
     // 🔥 Register Ionic 8 icons globally
     addIcons({
       folderOutline,
+      imageOutline,
       musicalNotesOutline,
       videocamOutline,
-      documentOutline,
+      documentTextOutline,
+      archiveOutline,
+      appsOutline,
+      searchOutline,
       chevronForwardOutline,
+      menuOutline,
+      arrowBackOutline,
     });
   }
 }

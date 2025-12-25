@@ -7,8 +7,9 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { GestureController } from '@ionic/angular';
+
 import {
   IonHeader,
   IonToolbar,
@@ -22,17 +23,23 @@ import {
   IonFooter,
   IonList,
   IonMenuButton,
-  IonRippleEffect, IonCheckbox } from '@ionic/angular/standalone';
-
+  IonCheckbox,
+  IonSegment,
+  IonSegmentButton,
+  IonRippleEffect,
+} from '@ionic/angular/standalone';
+import { ModalController } from '@ionic/angular/standalone';
 import { ExplorerFacade } from '../store/explorer.facade';
-import { FileItem } from './explorer-model';
+import { FileItem, ExplorerViewMode } from './explorer-model';
+import { FileDetailsComponent } from '../components/file-details/file-details.component';
 
 @Component({
   selector: 'app-explorer',
   templateUrl: './explorer.page.html',
   styleUrls: ['./explorer.page.scss'],
   standalone: true,
-  imports: [IonCheckbox, 
+  imports: [
+    IonRippleEffect,
     CommonModule,
     IonHeader,
     IonToolbar,
@@ -46,62 +53,74 @@ import { FileItem } from './explorer-model';
     IonFooter,
     IonList,
     IonMenuButton,
-    IonRippleEffect,
+    IonCheckbox,
+    IonSegment,
+    IonSegmentButton,
   ],
 })
 export class ExplorerPage implements OnInit, AfterViewInit {
-  files$: Observable<FileItem[]>;
-  currentPath$: Observable<string>;
-  hasSelection$: Observable<boolean>;
-  selectionMode$: Observable<boolean>;
-  selectedCount$: Observable<number>;
+  /* ===== Store streams ===== */
+  files$ = this.facade.files$;
+  currentPath$ = this.facade.currentPath$;
+  selectionMode$ = this.facade.selectionMode$;
+  selectedCount$ = this.facade.selectedCount$;
+  hasAnySelection$ = this.facade.hasAnySelection$;
+  viewMode$ = this.facade.viewMode$;
+  breadcrumbs$ = this.facade.breadcrumbs$;
 
+  /* ===== Header state ===== */
+  headerTitle$ = this.currentPath$.pipe(
+    map((path) =>
+      !path || path === '/' ? 'File Manager' : path.split('/').pop()!
+    )
+  );
+
+  isInsideStorage$ = this.currentPath$.pipe(
+    map((path) => !!path && path !== '/')
+  );
+
+  /* ===== Snapshots ===== */
   private filesSnapshot: FileItem[] = [];
   private selectionModeSnapshot = false;
+  private viewModeSnapshot: ExplorerViewMode = 'local';
 
   @ViewChildren('fileItem', { read: ElementRef })
   fileItems!: QueryList<ElementRef>;
 
   constructor(
-    private explorerFacade: ExplorerFacade,
-    private gestureCtrl: GestureController
-  ) {
-    this.files$ = this.explorerFacade.files$;
-    this.currentPath$ = this.explorerFacade.currentPath$;
-    this.hasSelection$ = this.explorerFacade.hasSelection$;
-    this.selectionMode$ = this.explorerFacade.selectionMode$;
-    this.selectedCount$ = this.explorerFacade.selectedCount$;
-  }
+    private facade: ExplorerFacade,
+    private gestureCtrl: GestureController,
+    private modalCtrl: ModalController
+  ) {}
 
   ngOnInit() {
-    this.explorerFacade.loadRoot();
+    this.facade.loadLocalRoots();
 
-    // keep snapshots in sync
-    this.files$.subscribe((files) => (this.filesSnapshot = files));
-    this.selectionMode$.subscribe(
-      (mode) => (this.selectionModeSnapshot = mode)
-    );
+    this.files$.subscribe((f) => (this.filesSnapshot = f));
+    this.selectionMode$.subscribe((m) => (this.selectionModeSnapshot = m));
+    this.viewMode$.subscribe((v) => (this.viewModeSnapshot = v));
   }
 
   ngAfterViewInit() {
-    this.fileItems.changes.subscribe(() => {
-      this.attachLongPressGestures();
-    });
-
-    this.attachLongPressGestures();
+    this.fileItems.changes.subscribe(() => this.attachLongPress());
+    this.attachLongPress();
   }
 
-  private attachLongPressGestures() {
+  private attachLongPress() {
+    if (this.viewModeSnapshot === 'category') return;
+
     this.fileItems.forEach((el, index) => {
+      const item = this.filesSnapshot[index];
+      if (!item?.selectable) return;
+
       const gesture = this.gestureCtrl.create({
         el: el.nativeElement,
         threshold: 0,
         gestureName: 'long-press',
         onStart: () => {
           const item = this.filesSnapshot[index];
-          if (item) {
-            this.explorerFacade.enterSelectionMode(item);
-          }
+          if (!item || item.isFolder) return;
+          this.openDetails(item);
         },
       });
 
@@ -109,37 +128,83 @@ export class ExplorerPage implements OnInit, AfterViewInit {
     });
   }
 
-  // tap behavior
   open(item: FileItem) {
+    if (this.viewModeSnapshot === 'recent') {
+      this.facade.playMedia(item);
+      this.facade.markAccess(item);
+      return;
+    }
+
     if (this.selectionModeSnapshot) {
-      this.explorerFacade.toggleSelection(item);
+      this.facade.toggleSelection(item);
+      return;
+    }
+
+    if (this.viewModeSnapshot === 'category') {
+      if (item.category) {
+        this.facade.openCategory(item.category);
+      }
       return;
     }
 
     if (item.isFolder) {
-      this.explorerFacade.openFolder(item.path);
+      this.facade.openFolder(item.path);
+      this.facade.markAccess(item);
     } else {
-      this.explorerFacade.playMedia(item);
+      this.facade.playMedia(item);
+      this.facade.markAccess(item);
     }
   }
 
   toggleSelection(item: FileItem) {
-    this.explorerFacade.toggleSelection(item);
+    if (item.selectable) {
+      this.facade.toggleSelection(item);
+    }
   }
 
   clearSelection() {
-    this.explorerFacade.exitSelectionMode();
-  }
-
-  deleteSelected() {
-    this.explorerFacade.deleteSelected();
+    this.facade.exitSelectionMode();
   }
 
   move() {
-    this.explorerFacade.startMove();
+    this.facade.startMove();
   }
 
   copy() {
-    this.explorerFacade.startCopy();
+    this.facade.startCopy();
+  }
+
+  deleteSelected() {
+    this.facade.deleteSelected();
+  }
+
+  goBack() {
+    this.facade.navigateUp();
+  }
+
+  changeView(value: unknown) {
+    if (value !== 'category' && value !== 'recent' && value !== 'local') return;
+
+    this.facade.setViewMode(value);
+
+    if (value === 'category') this.facade.loadCategoryView();
+    if (value === 'recent') this.facade.loadRecentView();
+    if (value === 'local') this.facade.loadLocalRoots();
+  }
+
+  navigateToCrumb(index: number) {
+    this.facade.navigateToPathIndex(index);
+  }
+
+  async openDetails(item: FileItem) {
+    const modal = await this.modalCtrl.create({
+      component: FileDetailsComponent,
+      componentProps: { file: item },
+      initialBreakpoint: 0.4,
+      breakpoints: [0.25, 0.4, 0.7],
+      handle: true,
+    });
+
+    await modal.present();
   }
 }
