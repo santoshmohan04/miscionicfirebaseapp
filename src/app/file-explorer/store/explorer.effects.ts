@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import * as ExplorerActions from './explorer.actions';
-import { FilesystemService } from '../../../core/services/filesystem.service';
+import { FilesystemService } from '../../core/services/filesystem.service';
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 

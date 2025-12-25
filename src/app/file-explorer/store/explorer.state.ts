@@ -1,11 +1,12 @@
 // explorer.state.ts
-import { FileItem } from '../../../core/models/file-item.model';
+import { FileItem } from '../pages/explorer-model';
 
 export interface ExplorerState {
   currentPath: string;
   files: FileItem[];
   selectedItems: FileItem[];
   loading: boolean;
+  selectionMode: boolean;
 }
 
 export const initialExplorerState: ExplorerState = {
@@ -13,4 +14,5 @@ export const initialExplorerState: ExplorerState = {
   files: [],
   selectedItems: [],
   loading: false,
+  selectionMode: false,
 };

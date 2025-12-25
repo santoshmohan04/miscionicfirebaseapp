@@ -1,6 +1,6 @@
 // explorer.actions.ts
 import { createAction, props } from '@ngrx/store';
-import { FileItem } from '../../../core/models/file-item.model';
+import { FileItem } from '../pages/explorer-model';
 
 export const loadFolder = createAction(
   '[Explorer] Load Folder',
@@ -28,3 +28,19 @@ export const clearSelection = createAction(
 export const deleteSelected = createAction(
   '[Explorer] Delete Selected'
 );
+
+export const enableSelection = createAction(
+  '[Explorer] Enable Selection',
+  props<{ item: FileItem }>()
+);
+
+export const enterSelectionMode = createAction(
+  '[Explorer] Enter Selection Mode',
+  props<{ item: FileItem }>()
+);
+
+export const exitSelectionMode = createAction(
+  '[Explorer] Exit Selection Mode'
+);
+
+

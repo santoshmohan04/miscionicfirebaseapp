@@ -24,3 +24,13 @@ export const selectSelectedItems = createSelector(
   selectExplorerState,
   state => state.selectedItems
 );
+
+export const selectSelectionMode = createSelector(
+  selectExplorerState,
+  state => state.selectionMode
+);
+
+export const selectSelectedCount = createSelector(
+  selectExplorerState,
+  state => state.files.filter(f => f.selected).length
+);

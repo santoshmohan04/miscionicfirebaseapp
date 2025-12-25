@@ -1,70 +1,99 @@
 <ion-header>
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+      <ion-button *ngIf="selectionMode$ | async" (click)="clearSelection()">
+        Cancel
+      </ion-button>
+
+      <ion-menu-button *ngIf="!(selectionMode$ | async)"></ion-menu-button>
     </ion-buttons>
 
-    <ion-title>File Explorer</ion-title>
+    <ion-title>
+      <ng-container *ngIf="(selectionMode$ | async); else normalTitle">
+        {{ selectedCount$ | async }} selected
+      </ng-container>
+
+      <ng-template #normalTitle> File Explorer </ng-template>
+    </ion-title>
 
     <ion-buttons slot="end">
-      <ion-button>
+      <ion-button fill="clear">
         <ion-icon name="search-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 
-  <!-- Breadcrumb -->
-  <ion-toolbar class="breadcrumb">
-    <ion-label>
-      {{ currentPath$ | async }}
-    </ion-label>
+  <!-- Breadcrumb placeholder (logic later) -->
+  <ion-toolbar class="breadcrumb-bar">
+    <ion-label class="breadcrumb-text"> {{ currentPath$ | async }} </ion-label>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
+  <ion-list lines="full">
+    <ion-item
+      #fileItem
+      *ngFor="let item of (files$ | async)"
+      class="file-item ion-activatable"
+      [class.selected]="item.selected"
+  [class.selection-mode]="selectionMode$ | async"
+      (click)="open(item)"
+    >
+      <ion-ripple-effect></ion-ripple-effect>
 
-  <ion-list>
-    @for (item of (files$ | async); track item) {
-      <ion-item
-        (click)="open(item)"
-        (press)="longPress(item)"
-        lines="full">
-        <ion-icon
-          [name]="item.isFolder ? 'folder' : (item.type === 'audio' ? 'musical-notes' : 'videocam')"
-          slot="start">
-        </ion-icon>
-        <ion-label>
-          <h2>{{ item.name }}</h2>
-          <p>{{ item.meta }}</p>
-        </ion-label>
-        @if (item.selectable) {
-          <ion-checkbox
-            slot="end"
-            [checked]="item.selected"
-            (ionChange)="toggleSelection(item)">
-          </ion-checkbox>
-        }
-        <ion-button fill="clear" slot="end">
-          <ion-icon name="ellipsis-vertical"></ion-icon>
-        </ion-button>
-      </ion-item>
-    }
+      <!-- Leading Icon (Ionic 8 correct icons) -->
+      <ion-icon
+        slot="start"
+        class="file-type-icon"
+        [name]="
+        item.isFolder
+          ? 'folder-outline'
+          : item.type === 'audio'
+          ? 'musical-notes-outline'
+          : item.type === 'video'
+          ? 'videocam-outline'
+          : 'document-outline'
+      "
+      ></ion-icon>
+
+      <!-- File Info -->
+      <ion-label>
+        <h2 class="file-name">{{ item.name }}</h2>
+        <p class="file-meta">{{ item.isFolder ? 'Folder' : item.meta }}</p>
+      </ion-label>
+
+      <!-- Selection Checkbox -->
+<ion-checkbox
+  *ngIf="selectionMode$ | async"
+  slot="end"
+  [checked]="item.selected"
+  (ionClick)="$event.stopPropagation(); toggleSelection(item)"
+></ion-checkbox>
+
+      <!-- Chevron -->
+      <ion-icon
+  *ngIf="!(selectionMode$ | async)"
+  slot="end"
+  name="chevron-forward-outline"
+  color="medium"
+></ion-icon>
+    </ion-item>
   </ion-list>
-
 </ion-content>
 
-<!-- Multi Select Footer -->
-@if (hasSelection$ | async) {
-  <ion-footer>
-    <ion-toolbar>
-      <ion-buttons slot="start">
-        <ion-button (click)="clearSelection()">✕</ion-button>
-      </ion-buttons>
-      <ion-buttons slot="end">
-        <ion-button (click)="move()">Move</ion-button>
-        <ion-button (click)="copy()">Copy</ion-button>
-        <ion-button color="danger" (click)="delete()">Delete</ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-footer>
-}
+<!-- Selection Action Bar -->
+<ion-footer *ngIf="hasSelection$ | async">
+  <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-button (click)="clearSelection()"> Cancel </ion-button>
+    </ion-buttons>
+
+    <ion-buttons slot="end">
+      <ion-button>Move</ion-button>
+      <ion-button>Copy</ion-button>
+      <ion-button color="danger" (click)="deleteSelected()">
+        Delete
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

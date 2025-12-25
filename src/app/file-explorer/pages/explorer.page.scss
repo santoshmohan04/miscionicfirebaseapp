@@ -1,15 +1,76 @@
-.breadcrumb {
-  ion-label {
-    font-size: 0.85rem;
-    color: var(--ion-color-medium);
-    padding-left: 16px;
-  }
+.file-item {
+  --min-height: 68px;
+  --padding-start: 12px;
+  transition: background-color 0.15s ease-in-out;
 }
 
-ion-item {
-  --min-height: 56px;
+/* Selection mode active */
+.file-item.selection-mode {
+  --background: transparent;
 }
 
-ion-icon {
-  font-size: 22px;
+/* Selected row highlight */
+.file-item.selected {
+  --background: rgba(0, 122, 255, 0.12); // iOS-like blue
+}
+
+/* Icon emphasis when selected */
+.file-item.selected .file-type-icon {
+  transform: scale(1.05);
+}
+
+/* Icon base */
+.file-type-icon {
+  font-size: 28px;
+}
+
+/* Folder */
+ion-icon[name='folder-outline'] {
+  color: var(--ion-color-warning);
+}
+
+/* Audio */
+ion-icon[name='musical-notes-outline'] {
+  color: var(--ion-color-primary);
+}
+
+/* Video */
+ion-icon[name='videocam-outline'] {
+  color: var(--ion-color-tertiary);
+}
+
+/* File text */
+.file-name {
+  font-weight: 600;
+}
+
+.file-meta {
+  font-size: 0.75rem;
+  color: var(--ion-color-medium);
+}
+
+/* Breadcrumb */
+.breadcrumb-bar {
+  --min-height: 36px;
+}
+
+.breadcrumb-text {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  padding-left: 16px;
+}
+
+/* Smooth checkbox appearance */
+ion-checkbox {
+  margin-inline-start: 8px;
+}
+
+ion-title {
+  font-weight: 600;
+}
+
+/* Footer actions */
+ion-footer ion-toolbar {
+  --padding-start: 8px;
+  --padding-end: 8px;
 }
