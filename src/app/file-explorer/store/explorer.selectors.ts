@@ -62,3 +62,8 @@ export const selectBreadcrumbs = createSelector(
   selectExplorerState,
   (state) => state.pathStack
 );
+
+export const selectClipboard = createSelector(
+  selectExplorerState,
+  (state) => state.clipboard
+);

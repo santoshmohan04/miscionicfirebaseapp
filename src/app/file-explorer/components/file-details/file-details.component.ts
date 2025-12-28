@@ -1,13 +1,14 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  IonContent,
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonContent,
   IonItem,
   IonLabel,
   IonIcon,
+  IonList,
   IonButton,
 } from '@ionic/angular/standalone';
 import { FileItem } from '../../pages/explorer-model';
@@ -17,13 +18,14 @@ import { FileItem } from '../../pages/explorer-model';
   standalone: true,
   imports: [
     CommonModule,
+    IonContent,
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonContent,
     IonItem,
     IonLabel,
     IonIcon,
+    IonList,
     IonButton,
   ],
   template: `
@@ -37,35 +39,54 @@ import { FileItem } from '../../pages/explorer-model';
     </ion-header>
 
     <ion-content>
-      <ion-item lines="none">
-        <ion-icon
-          slot="start"
-          [name]="icon"
-          size="large"
-        ></ion-icon>
+      <ion-list>
 
-        <ion-label>
-          <h2>{{ file.name }}</h2>
-          <p>{{ file.isFolder ? 'Folder' : file.type }}</p>
-        </ion-label>
-      </ion-item>
+        <ion-item>
+          <ion-icon slot="start" [name]="icon" size="large"></ion-icon>
+          <ion-label>
+            <h2>{{ file.name }}</h2>
+            <p>{{ file.isFolder ? 'Folder' : file.type }}</p>
+          </ion-label>
+        </ion-item>
 
-      <ion-item>
-        <ion-label>Path</ion-label>
-        <p>{{ file.path }}</p>
-      </ion-item>
+        <ion-item>
+          <ion-label>
+            <h2>Type</h2>
+            <p>{{ file.type || 'Unknown' }}</p>
+          </ion-label>
+        </ion-item>
 
-      <ion-item *ngIf="file.meta">
-        <ion-label>Info</ion-label>
-        <p>{{ file.meta }}</p>
-      </ion-item>
+        <ion-item>
+          <ion-label>
+            <h2>Path</h2>
+            <p class="mono">{{ file.path }}</p>
+          </ion-label>
+        </ion-item>
 
-      <ion-item>
-        <ion-label>Type</ion-label>
-        <p>{{ file.isFolder ? 'Folder' : file.type }}</p>
-      </ion-item>
+        <ion-item *ngIf="file.size">
+          <ion-label>
+            <h2>Size</h2>
+            <p>{{ file.size | number }} bytes</p>
+          </ion-label>
+        </ion-item>
+
+        <ion-item *ngIf="file.lastModified">
+          <ion-label>
+            <h2>Last modified</h2>
+            <p>{{ file.lastModified | date:'medium' }}</p>
+          </ion-label>
+        </ion-item>
+
+      </ion-list>
     </ion-content>
   `,
+  styles: [`
+    .mono {
+      font-family: monospace;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  `],
 })
 export class FileDetailsComponent {
   @Input() file!: FileItem;

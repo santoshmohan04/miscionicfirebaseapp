@@ -1,10 +1,12 @@
 export type FileType =
+  | 'folder'
   | 'audio'
   | 'video'
   | 'image'
   | 'document'
   | 'zip'
-  | 'app';
+  | 'apk'
+  | 'unknown';
 
 export type FileCategory =
   | 'pictures'
@@ -18,27 +20,17 @@ export type ExplorerViewMode = 'category' | 'recent' | 'local';
 
 export interface FileItem {
   name: string;
-  path: string;
-
-  /** Folder or file */
+  path: string;          // SAF uri or virtual path
   isFolder: boolean;
-
-  /** ONLY for files (never for folders) */
-  type?: FileType;
-
-  /** ONLY for category tiles */
+  type: FileType;        // ✅ folder INCLUDED
   category?: FileCategory;
-
-  /** UI metadata */
   meta?: string;
-
-  /** Selection state */
   selected?: boolean;
   selectable?: boolean;
+  lastAccessed?: number;
 
-  /** Storage root flag (Internal / External) */
-  isStorageRoot?: boolean;
-
-  /** RECENT SUPPORT */
-  lastAccessed?: number; // unix timestamp
+  /* UI / metadata */
+  size?: number;         // bytes (native later)
+  mimeType?: string;     // native later
+  lastModified?: number; // native later
 }

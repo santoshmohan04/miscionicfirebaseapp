@@ -8,6 +8,11 @@ export interface ExplorerState {
   selectionMode: boolean;
   selectedItems: FileItem[];
   loading: boolean;
+
+  clipboard?: {
+    mode: 'copy' | 'move';
+    items: FileItem[];
+  };
 }
 
 export const initialExplorerState: ExplorerState = {

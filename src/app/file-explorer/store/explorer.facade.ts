@@ -78,6 +78,10 @@ export class ExplorerFacade {
     this.store.dispatch(ExplorerActions.startCopy());
   }
 
+  confirmPaste(targetUri: string) {
+    this.store.dispatch(ExplorerActions.confirmPaste({ targetUri }));
+  }
+
   playMedia(item: FileItem) {
     this.store.dispatch(ExplorerActions.playMedia({ item }));
   }

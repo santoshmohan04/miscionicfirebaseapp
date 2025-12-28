@@ -1,4 +1,3 @@
-// explorer.reducer.ts
 import { createReducer, on } from '@ngrx/store';
 import * as ExplorerActions from './explorer.actions';
 import { ExplorerState, initialExplorerState } from './explorer.state';
@@ -16,7 +15,8 @@ export const explorerReducer = createReducer<ExplorerState>(
     ...state,
     viewMode: 'local' as ExplorerViewMode,
     currentPath: '/',
-    files: STORAGE_ROOTS.map((r) => ({
+    pathStack: [],
+    files: STORAGE_ROOTS.map(r => ({
       ...r,
       selected: false,
       selectable: false,
@@ -31,7 +31,6 @@ export const explorerReducer = createReducer<ExplorerState>(
   on(ExplorerActions.loadFolder, (state, { path }) => ({
     ...state,
     currentPath: path,
-    pathStack: path.split('/').filter(Boolean),
     loading: true,
     selectionMode: false,
     selectedItems: [],
@@ -39,10 +38,10 @@ export const explorerReducer = createReducer<ExplorerState>(
 
   on(ExplorerActions.loadFolderSuccess, (state, { files }) => ({
     ...state,
-    files: files.map((f) => ({
+    files: files.map(f => ({
       ...f,
       selected: false,
-      selectable: false,
+      selectable: !f.isFolder,
     })),
     loading: false,
   })),
@@ -51,7 +50,7 @@ export const explorerReducer = createReducer<ExplorerState>(
      SELECTION MODE
      ======================= */
   on(ExplorerActions.enterSelectionMode, (state, { item }) => {
-    const files = state.files.map((f) =>
+    const files = state.files.map(f =>
       f.path === item.path
         ? { ...f, selected: true }
         : { ...f, selected: false }
@@ -61,26 +60,26 @@ export const explorerReducer = createReducer<ExplorerState>(
       ...state,
       selectionMode: true,
       files,
-      selectedItems: files.filter((f) => f.selected),
+      selectedItems: files.filter(f => f.selected),
     };
   }),
 
   on(ExplorerActions.selectItem, (state, { item }) => {
-    const files = state.files.map((f) =>
+    const files = state.files.map(f =>
       f.path === item.path ? { ...f, selected: !f.selected } : f
     );
 
     return {
       ...state,
       files,
-      selectedItems: files.filter((f) => f.selected),
+      selectedItems: files.filter(f => f.selected),
     };
   }),
 
   on(ExplorerActions.exitSelectionMode, (state) => ({
     ...state,
     selectionMode: false,
-    files: state.files.map((f) => ({
+    files: state.files.map(f => ({
       ...f,
       selected: false,
       selectable: false,
@@ -105,7 +104,7 @@ export const explorerReducer = createReducer<ExplorerState>(
     ...state,
     viewMode: 'category' as ExplorerViewMode,
     currentPath: '/',
-    files: CATEGORY_ITEMS.map((c) => ({
+    files: CATEGORY_ITEMS.map(c => ({
       ...c,
       selected: false,
       selectable: false,
@@ -118,48 +117,55 @@ export const explorerReducer = createReducer<ExplorerState>(
     ...state,
     viewMode: 'local' as ExplorerViewMode,
     currentPath: category,
-    files: state.files
-      .filter((f) => f.category === category)
-      .map((f) => ({
-        ...f,
-        selected: false,
-        selectable: false,
-      })),
     selectionMode: false,
     selectedItems: [],
+    files: state.files.filter(f => f.category === category),
   })),
 
-  on(ExplorerActions.markItemAccessed, (state, { path }) => ({
-    ...state,
-    files: state.files.map((f) =>
-      f.path === path ? { ...f, lastAccessed: Date.now() } : f
-    ),
-  })),
-
+  /* =======================
+     RECENT VIEW
+     ======================= */
   on(ExplorerActions.loadRecentView, (state) => ({
     ...state,
-    viewMode: 'recent',
+    viewMode: 'recent' as ExplorerViewMode,
     currentPath: 'Recent',
     selectionMode: false,
     selectedItems: [],
     files: [...state.files]
-      .filter((f) => !f.isFolder && f.lastAccessed)
+      .filter(f => !f.isFolder && f.lastAccessed)
       .sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0))
-      .map((f) => ({
+      .map(f => ({
         ...f,
         selected: false,
-        selectable: false, // 🚫 no selection in Recent
+        selectable: false,
       })),
   })),
 
-  on(ExplorerActions.navigateUp, (state) => {
-    const newStack = [...state.pathStack];
-    newStack.pop();
+  /* =======================
+     FILE OPERATIONS
+     ======================= */
+  on(ExplorerActions.startCopy, (state) => ({
+    ...state,
+    clipboard: {
+      mode: 'copy',
+      items: state.selectedItems,
+    },
+    selectionMode: false,
+  })),
 
-    return {
-      ...state,
-      pathStack: Array.from(new Set(state.pathStack)),
-      currentPath: '/' + newStack.join('/'),
-    };
-  })
+  on(ExplorerActions.startMove, (state) => ({
+    ...state,
+    clipboard: {
+      mode: 'move',
+      items: state.selectedItems,
+    },
+    selectionMode: false,
+  })),
+
+  on(ExplorerActions.fileOpSuccess, (state) => ({
+    ...state,
+    clipboard: undefined,
+    selectedItems: [],
+    selectionMode: false,
+  })),
 );

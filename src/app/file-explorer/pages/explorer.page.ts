@@ -56,6 +56,7 @@ import { FileDetailsComponent } from '../components/file-details/file-details.co
     IonCheckbox,
     IonSegment,
     IonSegmentButton,
+    FileDetailsComponent,
   ],
 })
 export class ExplorerPage implements OnInit, AfterViewInit {
@@ -90,10 +91,11 @@ export class ExplorerPage implements OnInit, AfterViewInit {
   constructor(
     private facade: ExplorerFacade,
     private gestureCtrl: GestureController,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
   ) {}
 
   ngOnInit() {
+    this.facade.setViewMode('local');
     this.facade.loadLocalRoots();
 
     this.files$.subscribe((f) => (this.filesSnapshot = f));
