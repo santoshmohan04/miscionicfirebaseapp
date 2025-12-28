@@ -28,7 +28,10 @@ export const selectLoading = createSelector(
   selectExplorerState,
   (state) => state.loading
 );
-
+export const selectCurrentStorageLoading = createSelector(
+  selectExplorerState,
+  (state) => state.currentStorageLoading
+);
 /* =======================
    SELECTION
    ======================= */

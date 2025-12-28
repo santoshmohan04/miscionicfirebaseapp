@@ -1,5 +1,5 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, inject } from '@angular/core';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import {
   IonContent,
   IonHeader,
@@ -10,6 +10,7 @@ import {
   IonIcon,
   IonList,
   IonButton,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { FileItem } from '../../pages/explorer-model';
 
@@ -18,6 +19,8 @@ import { FileItem } from '../../pages/explorer-model';
   standalone: true,
   imports: [
     CommonModule,
+    DatePipe,
+    DecimalPipe,
     IonContent,
     IonHeader,
     IonToolbar,
@@ -90,6 +93,7 @@ import { FileItem } from '../../pages/explorer-model';
 })
 export class FileDetailsComponent {
   @Input() file!: FileItem;
+  private modalCtrl = inject(ModalController);
 
   get icon() {
     if (this.file.isFolder) return 'folder-outline';
@@ -99,6 +103,6 @@ export class FileDetailsComponent {
   }
 
   dismiss() {
-    document.querySelector('ion-modal')?.dismiss();
+    this.modalCtrl.dismiss();
   }
 }

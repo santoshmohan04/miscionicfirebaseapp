@@ -8,12 +8,22 @@ export class StoragePermissionService {
   async check(): Promise<boolean> {
     if (Capacitor.getPlatform() !== 'android') return true;
 
-    const status = await Filesystem.checkPermissions();
-    return status.publicStorage === 'granted';
+    try {
+      const status = await Filesystem.checkPermissions();
+      return status.publicStorage === 'granted';
+    } catch (error) {
+      console.warn('Filesystem plugin not available, assuming permission granted:', error);
+      return true; // Assume granted if plugin not available
+    }
   }
 
   async request(): Promise<boolean> {
-    const status = await Filesystem.requestPermissions();
-    return status.publicStorage === 'granted';
+    try {
+      const status = await Filesystem.requestPermissions();
+      return status.publicStorage === 'granted';
+    } catch (error) {
+      console.warn('Filesystem plugin not available, assuming permission granted:', error);
+      return true; // Assume granted if plugin not available
+    }
   }
 }

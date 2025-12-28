@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { from, of } from 'rxjs';
@@ -8,6 +8,7 @@ import {
   switchMap,
   withLatestFrom,
   filter,
+  tap,
 } from 'rxjs/operators';
 
 import * as ExplorerActions from './explorer.actions';
@@ -18,12 +19,12 @@ import { FilesystemService } from '../../core/services/filesystem.service';
 
 @Injectable()
 export class ExplorerEffects {
-  constructor(
-    private actions$: Actions,
-    private local: LocalFilesService,
-    private fs: FilesystemService,
-    private store: Store
-  ) {}
+  private actions$ = inject(Actions);
+  private local = inject(LocalFilesService);
+  private fs = inject(FilesystemService);
+  private store = inject(Store);
+
+  constructor() {}
 
   /* =====================================================
      LOCAL VIEW – ROOT
@@ -42,13 +43,47 @@ export class ExplorerEffects {
   );
 
   /* =====================================================
+     LOCAL VIEW – OPEN STORAGE
+     ===================================================== */
+  openStorage$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ExplorerActions.openStorage),
+      tap(({ storageName }) => console.log('=== Effect openStorage$ triggered for:', storageName)),
+      switchMap(({ storageName }) =>
+        from(this.local.openStorage(storageName)).pipe(
+          tap(() => console.log('=== openStorage completed successfully')),
+          map(files => ExplorerActions.loadFolderSuccess({ files })),
+          catchError((error) => {
+            console.error('=== openStorage failed:', error);
+            
+            // Show user-friendly error message
+            if (error.message === 'Picker already open') {
+              console.warn('⚠️ Please wait for the current picker to complete');
+            } else if (error.message === 'User cancelled') {
+              console.log('ℹ️ Folder selection cancelled');
+            } else {
+              console.error('❌ Failed to open storage:', error.message);
+            }
+            
+            return of(ExplorerActions.loadFolderFailure());
+          })
+        )
+      )
+    )
+  );
+
+  /* =====================================================
      LOCAL VIEW – OPEN FOLDER
      ===================================================== */
   openLocalFolder$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ExplorerActions.loadFolder),
       withLatestFrom(this.store.select(ExplorerSelectors.selectViewMode)),
+      tap(([{ path }, viewMode]) => console.log('=== Effect openLocalFolder$ - path:', path, 'viewMode:', viewMode)),
       filter(([_, viewMode]) => viewMode === 'local'),
+      tap(([{ path }]) => console.log('=== After viewMode filter - path:', path)),
+      filter(([{ path }, _]) => path !== 'internal' && path !== 'external'), // Skip storage root items
+      tap(([{ path }]) => console.log('=== After path filter, proceeding with:', path)),
       switchMap(([{ path }]) =>
         from(this.local.openFolderByPath(path)).pipe(
           map(files => ExplorerActions.loadFolderSuccess({ files })),

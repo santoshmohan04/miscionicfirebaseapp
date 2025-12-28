@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import * as ExplorerActions from './explorer.actions';
 import * as ExplorerSelectors from './explorer.selectors';
@@ -7,6 +7,9 @@ import { StoragePermissionService } from 'src/app/core/services/storage-permissi
 
 @Injectable({ providedIn: 'root' })
 export class ExplorerFacade {
+  private store = inject(Store);
+  private permissionService = inject(StoragePermissionService);
+
   files$ = this.store.select(ExplorerSelectors.selectFiles);
   currentPath$ = this.store.select(ExplorerSelectors.selectCurrentPath);
   selectionMode$ = this.store.select(ExplorerSelectors.selectSelectionMode);
@@ -15,11 +18,10 @@ export class ExplorerFacade {
   viewMode$ = this.store.select(ExplorerSelectors.selectViewMode);
   breadcrumbs$ = this.store.select(ExplorerSelectors.selectBreadcrumbs);
   clipboard$ = this.store.select(ExplorerSelectors.selectClipboard);
+  isLoading$ = this.store.select(ExplorerSelectors.selectLoading);
+  currentStorageLoading$ = this.store.select(ExplorerSelectors.selectCurrentStorageLoading);
 
-  constructor(
-    private store: Store,
-    private permissionService: StoragePermissionService
-  ) {}
+  constructor() {}
 
   async loadLocalRoots() {
     const granted = await this.permissionService.check();
@@ -32,7 +34,13 @@ export class ExplorerFacade {
   }
 
   openFolder(path: string) {
+    console.log('=== Facade.openFolder() called with path:', path);
     this.store.dispatch(ExplorerActions.loadFolder({ path }));
+  }
+
+  openStorage(storageName: string) {
+    console.log('=== Facade.openStorage() called with storageName:', storageName);
+    this.store.dispatch(ExplorerActions.openStorage({ storageName }));
   }
 
   loadFolder(path: string) {

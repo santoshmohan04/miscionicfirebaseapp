@@ -11,6 +11,11 @@ export const loadFolder = createAction(
   props<{ path: string }>()
 );
 
+export const openStorage = createAction(
+  '[Explorer] Open Storage',
+  props<{ storageName: string }>()
+);
+
 export const loadFolderSuccess = createAction(
   '[Explorer] Load Folder Success',
   props<{ files: FileItem[] }>()

@@ -23,6 +23,19 @@ export const explorerReducer = createReducer<ExplorerState>(
     })),
     selectionMode: false,
     selectedItems: [],
+    loading: false,
+    currentStorageLoading: null,
+  })),
+
+  /* =======================
+     OPEN STORAGE
+     ======================= */
+  on(ExplorerActions.openStorage, (state, { storageName }) => ({
+    ...state,
+    loading: true,
+    currentStorageLoading: storageName,
+    selectionMode: false,
+    selectedItems: [],
   })),
 
   /* =======================
@@ -44,6 +57,13 @@ export const explorerReducer = createReducer<ExplorerState>(
       selectable: !f.isFolder,
     })),
     loading: false,
+    currentStorageLoading: null,
+  })),
+
+  on(ExplorerActions.loadFolderFailure, (state) => ({
+    ...state,
+    loading: false,
+    currentStorageLoading: null,
   })),
 
   /* =======================

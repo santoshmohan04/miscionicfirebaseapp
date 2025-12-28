@@ -8,6 +8,7 @@ export interface ExplorerState {
   selectionMode: boolean;
   selectedItems: FileItem[];
   loading: boolean;
+  currentStorageLoading: string | null;
 
   clipboard?: {
     mode: 'copy' | 'move';
@@ -23,4 +24,5 @@ export const initialExplorerState: ExplorerState = {
   selectionMode: false,
   selectedItems: [],
   loading: false,
+  currentStorageLoading: null,
 };

@@ -5,6 +5,7 @@ import {
   ViewChildren,
   QueryList,
   ElementRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { map, take } from 'rxjs/operators';
@@ -26,8 +27,7 @@ import {
   IonCheckbox,
   IonSegment,
   IonSegmentButton,
-  IonRippleEffect,
-} from '@ionic/angular/standalone';
+  IonRippleEffect, IonSpinner } from '@ionic/angular/standalone';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExplorerFacade } from '../store/explorer.facade';
 import { FileItem, ExplorerViewMode } from './explorer-model';
@@ -38,7 +38,7 @@ import { FileDetailsComponent } from '../components/file-details/file-details.co
   templateUrl: './explorer.page.html',
   styleUrls: ['./explorer.page.scss'],
   standalone: true,
-  imports: [
+  imports: [IonSpinner, 
     IonRippleEffect,
     CommonModule,
     IonHeader,
@@ -56,10 +56,14 @@ import { FileDetailsComponent } from '../components/file-details/file-details.co
     IonCheckbox,
     IonSegment,
     IonSegmentButton,
-    FileDetailsComponent,
   ],
 })
 export class ExplorerPage implements OnInit, AfterViewInit {
+  /* ===== Injected services ===== */
+  facade = inject(ExplorerFacade);
+  private gestureCtrl = inject(GestureController);
+  private modalCtrl = inject(ModalController);
+
   /* ===== Store streams ===== */
   files$ = this.facade.files$;
   currentPath$ = this.facade.currentPath$;
@@ -89,11 +93,7 @@ export class ExplorerPage implements OnInit, AfterViewInit {
   @ViewChildren('fileItem', { read: ElementRef })
   fileItems!: QueryList<ElementRef>;
 
-  constructor(
-    private facade: ExplorerFacade,
-    private gestureCtrl: GestureController,
-    private modalCtrl: ModalController,
-  ) {}
+  constructor() {}
 
   ngOnInit() {
     this.facade.setViewMode('local');
@@ -132,6 +132,11 @@ export class ExplorerPage implements OnInit, AfterViewInit {
   }
 
   open(item: FileItem) {
+    console.log('=== ExplorerPage.open() called ===');
+    console.log('Item:', item);
+    console.log('ViewMode:', this.viewModeSnapshot);
+    console.log('SelectionMode:', this.selectionModeSnapshot);
+
     if (this.viewModeSnapshot === 'recent') {
       this.facade.playMedia(item);
       this.facade.markAccess(item);
@@ -151,7 +156,14 @@ export class ExplorerPage implements OnInit, AfterViewInit {
     }
 
     if (item.isFolder) {
-      this.facade.openFolder(item.path);
+      // Check if this is a storage selection (path = 'internal' or 'external')
+      if (this.viewModeSnapshot === 'local' && (item.path === 'internal' || item.path === 'external')) {
+        console.log('>>> Opening storage:', item.name);
+        this.facade.openStorage(item.name);
+      } else {
+        console.log('>>> Opening folder:', item.path);
+        this.facade.openFolder(item.path);
+      }
       this.facade.markAccess(item);
     } else {
       this.facade.playMedia(item);
