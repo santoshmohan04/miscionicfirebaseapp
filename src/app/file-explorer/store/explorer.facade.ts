@@ -14,6 +14,7 @@ export class ExplorerFacade {
   hasAnySelection$ = this.store.select(ExplorerSelectors.selectHasAnySelection);
   viewMode$ = this.store.select(ExplorerSelectors.selectViewMode);
   breadcrumbs$ = this.store.select(ExplorerSelectors.selectBreadcrumbs);
+  clipboard$ = this.store.select(ExplorerSelectors.selectClipboard);
 
   constructor(
     private store: Store,

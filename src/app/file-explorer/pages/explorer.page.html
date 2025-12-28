@@ -148,38 +148,49 @@
 <!-- ================= FOOTER ACTIONS ================= -->
 <ion-footer
   *ngIf="
-    (selectionMode$ | async) &&
+    ((selectionMode$ | async) || (clipboard$ | async)) &&
     (viewMode$ | async) !== 'category' &&
     (viewMode$ | async) !== 'recent'
   "
 >
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="clearSelection()">Cancel</ion-button>
+      <ion-button *ngIf="(selectionMode$ | async)" (click)="clearSelection()">Cancel</ion-button>
     </ion-buttons>
 
     <ion-buttons slot="end">
-      <ion-button
-        [disabled]="!(hasAnySelection$ | async)"
-        (click)="move()"
-      >
-        Move
-      </ion-button>
+      <!-- Selection mode buttons -->
+      <ng-container *ngIf="(selectionMode$ | async)">
+        <ion-button
+          [disabled]="!(hasAnySelection$ | async)"
+          (click)="move()"
+        >
+          Move
+        </ion-button>
 
-      <ion-button
-        [disabled]="!(hasAnySelection$ | async)"
-        (click)="copy()"
-      >
-        Copy
-      </ion-button>
+        <ion-button
+          [disabled]="!(hasAnySelection$ | async)"
+          (click)="copy()"
+        >
+          Copy
+        </ion-button>
 
-      <ion-button
-        color="danger"
-        [disabled]="!(hasAnySelection$ | async)"
-        (click)="deleteSelected()"
-      >
-        Delete
-      </ion-button>
+        <ion-button
+          color="danger"
+          [disabled]="!(hasAnySelection$ | async)"
+          (click)="deleteSelected()"
+        >
+          Delete
+        </ion-button>
+      </ng-container>
+
+      <!-- Paste mode button -->
+      <ng-container *ngIf="(clipboard$ | async) && !(selectionMode$ | async)">
+        <ion-button (click)="paste()">
+          <ion-icon name="clipboard-outline"></ion-icon>
+          Paste
+        </ion-button>
+      </ng-container>
     </ion-buttons>
   </ion-toolbar>
 </ion-footer>

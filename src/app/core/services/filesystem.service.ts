@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Preferences } from '@capacitor/preferences';
 import { SafPicker } from 'saf-picker';
+import { SafFileOps } from 'saf-file-ops';
 import { FileItem } from '../../file-explorer/pages/explorer-model';
 
 export interface SafRoot {
@@ -74,24 +75,32 @@ export class FilesystemService {
      SAF FILE OPERATIONS (NATIVE)
      ============================= */
 
-  async deleteSafItems(_items: FileItem[]): Promise<void> {
-    // Native implementation
-    throw new Error('Not implemented yet');
+  async deleteSafItems(items: FileItem[]): Promise<void> {
+    await SafFileOps.deleteItems({
+      items: items.map((i: FileItem) => ({
+        uri: i.path,
+        name: i.name,
+      })),
+    });
   }
 
-  async copySafItems(
-    _items: FileItem[],
-    _targetUri: string
-  ): Promise<void> {
-    // Native implementation
-    throw new Error('Not implemented yet');
+  async copySafItems(items: FileItem[], targetUri: string): Promise<void> {
+    await SafFileOps.copyItems({
+      targetUri,
+      items: items.map((i: FileItem) => ({
+        uri: i.path,
+        name: i.name,
+      })),
+    });
   }
 
-  async moveSafItems(
-    _items: FileItem[],
-    _targetUri: string
-  ): Promise<void> {
-    // Native implementation
-    throw new Error('Not implemented yet');
+  async moveSafItems(items: FileItem[], targetUri: string): Promise<void> {
+    await SafFileOps.moveItems({
+      targetUri,
+      items: items.map((i: FileItem) => ({
+        uri: i.path,
+        name: i.name,
+      })),
+    });
   }
 }

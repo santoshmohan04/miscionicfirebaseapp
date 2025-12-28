@@ -7,6 +7,9 @@ const config: CapacitorConfig = {
   plugins: {
     SafPickerPlugin: {
       packageName: 'com.mycompany.plugins.safpicker'
+    },
+    SafFileOps: {
+      packageName: 'com.mycompany.saffileops'
     }
   }
 };

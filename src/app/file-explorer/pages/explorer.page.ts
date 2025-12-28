@@ -7,7 +7,7 @@ import {
   ElementRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { map } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { GestureController } from '@ionic/angular';
 
 import {
@@ -68,6 +68,7 @@ export class ExplorerPage implements OnInit, AfterViewInit {
   hasAnySelection$ = this.facade.hasAnySelection$;
   viewMode$ = this.facade.viewMode$;
   breadcrumbs$ = this.facade.breadcrumbs$;
+  clipboard$ = this.facade.clipboard$;
 
   /* ===== Header state ===== */
   headerTitle$ = this.currentPath$.pipe(
@@ -178,6 +179,14 @@ export class ExplorerPage implements OnInit, AfterViewInit {
 
   deleteSelected() {
     this.facade.deleteSelected();
+  }
+
+  paste() {
+    this.currentPath$.pipe(take(1)).subscribe(path => {
+      if (path) {
+        this.facade.confirmPaste(path);
+      }
+    });
   }
 
   goBack() {
