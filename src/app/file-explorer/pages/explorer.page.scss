@@ -1,0 +1,185 @@
+/* ===============================
+   HEADER & SEGMENT (TOP BAR)
+   =============================== */
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  color: white;
+  
+  ion-spinner {
+    transform: scale(1.5);
+    margin-bottom: 20px;
+  }
+  
+  p {
+    font-size: 16px;
+    margin: 0;
+    padding: 0 20px;
+    text-align: center;
+    
+    small {
+      display: block;
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 8px;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+ion-toolbar[color='primary'] {
+  --color: #ffffff;
+}
+
+ion-title {
+  font-weight: 600;
+  font-size: 18px;
+  color: #ffffff;
+}
+
+/* Segment inside header */
+.header-segment {
+  --background: transparent;
+  --indicator-color: #ffffff;
+  --color: rgba(255, 255, 255, 0.7);
+}
+
+ion-segment-button {
+  --color-checked: #ffffff;
+  --color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 13px;
+}
+
+/* ===============================
+   CATEGORY GRID VIEW
+   =============================== */
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  padding: 18px;
+}
+
+.category-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px 10px;
+  border-radius: 14px;
+
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.category-tile:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.category-icon {
+  font-size: 44px;
+  margin-bottom: 10px;
+  color: var(--ion-color-primary);
+}
+
+.category-name {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+}
+
+/* ===============================
+   LIST VIEW (LOCAL / RECENT)
+   =============================== */
+
+.file-item {
+  --min-height: 68px;
+  --padding-start: 12px;
+  transition: background-color 0.15s ease-in-out;
+}
+
+/* Selection mode background */
+.file-item.selected {
+  --background: rgba(0, 122, 255, 0.12);
+}
+
+/* File icons */
+.file-type-icon {
+  font-size: 28px;
+}
+
+/* Folder */
+ion-icon[name='folder-outline'] {
+  color: var(--ion-color-warning);
+}
+
+/* Audio */
+ion-icon[name='musical-notes-outline'] {
+  color: var(--ion-color-primary);
+}
+
+/* Video */
+ion-icon[name='videocam-outline'] {
+  color: var(--ion-color-tertiary);
+}
+
+/* Documents */
+ion-icon[name='document-outline'],
+ion-icon[name='document-text-outline'] {
+  color: var(--ion-color-medium);
+}
+
+/* File text */
+.file-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.file-meta {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+/* Checkbox spacing */
+ion-checkbox {
+  margin-inline-start: 8px;
+}
+
+/* ===============================
+   FOOTER ACTION BAR
+   =============================== */
+
+ion-footer ion-toolbar {
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+ion-button[disabled] {
+  opacity: 0.4;
+}

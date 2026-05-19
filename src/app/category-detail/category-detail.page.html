@@ -1,0 +1,140 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ categoryName() }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Category Header -->
+  <div class="category-header" *ngIf="!loading()">
+    <div class="header-icon">
+      <ion-icon [name]="categoryIcon()"></ion-icon>
+    </div>
+    <h2>{{ categoryName() }}</h2>
+    <div class="header-stats">
+      <span class="stat">{{ files().length }} {{ files().length === 1 ? 'file' : 'files' }}</span>
+      <span class="separator">•</span>
+      <span class="stat">{{ formatBytes(totalSize()) }}</span>
+    </div>
+  </div>
+
+  <!-- Sort Bar -->
+  <div class="sort-bar" *ngIf="!loading() && files().length > 0">
+    <ion-segment [value]="sortBy()" (ionChange)="changeSortOption($any($event.detail.value))">
+      <ion-segment-button value="size">
+        <ion-label>Size</ion-label>
+        <ion-icon name="arrow-down" *ngIf="sortBy() === 'size'"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="name">
+        <ion-label>Name</ion-label>
+        <ion-icon name="arrow-down" *ngIf="sortBy() === 'name'"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="date">
+        <ion-label>Date</ion-label>
+        <ion-icon name="arrow-down" *ngIf="sortBy() === 'date'"></ion-icon>
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <!-- Header Skeleton -->
+    <div class="skeleton-header">
+      <div class="skeleton-icon-large"></div>
+      <div class="skeleton-text skeleton-text-xl"></div>
+      <div class="skeleton-text skeleton-text-sm"></div>
+    </div>
+
+    <!-- Sort Bar Skeleton -->
+    <div class="skeleton-sort-bar">
+      <div class="skeleton-pill"></div>
+      <div class="skeleton-pill"></div>
+      <div class="skeleton-pill"></div>
+    </div>
+
+    <!-- File List Skeleton -->
+    <div class="skeleton-file-list">
+      <div class="skeleton-file-item" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="skeleton-file-icon"></div>
+        <div class="skeleton-file-content">
+          <div class="skeleton-text skeleton-text-md"></div>
+          <div class="skeleton-text skeleton-text-xs"></div>
+        </div>
+        <div class="skeleton-text skeleton-text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Required State -->
+  <div *ngIf="!loading() && !hasPermission()" class="error-state">
+    <div class="error-animation">
+      <div class="error-icon-wrapper">
+        <ion-icon name="lock-closed-outline" class="lock-icon"></ion-icon>
+        <ion-icon [name]="categoryIcon()" class="folder-icon"></ion-icon>
+      </div>
+    </div>
+    <h2>Storage Access Required</h2>
+    <p>Grant storage permissions to view your {{ categoryName().toLowerCase() }}.</p>
+    <ion-button (click)="requestPermissions()" expand="block" class="retry-button" shape="round">
+      <ion-icon name="settings-outline" slot="start"></ion-icon>
+      Grant Permission
+    </ion-button>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading() && hasPermission() && files().length === 0" class="empty-state">
+    <div class="empty-animation">
+      <div class="empty-icon-wrapper">
+        <ion-icon [name]="categoryIcon()" class="main-icon"></ion-icon>
+        <div class="sparkle sparkle-1"></div>
+        <div class="sparkle sparkle-2"></div>
+        <div class="sparkle sparkle-3"></div>
+      </div>
+    </div>
+    <h3>No {{ categoryName() }}</h3>
+    <p>There are no {{ categoryName().toLowerCase() }} on your device yet.</p>
+    <p class="empty-hint">Files you download or create will appear here.</p>
+  </div>
+
+
+  <!-- File List -->
+  <div *ngIf="!loading() && hasPermission() && files().length > 0" class="file-list">
+    <ion-item-sliding *ngFor="let file of filteredFiles(); let i = index">
+      <ion-item (click)="openFile(file)" button="true" detail="false" class="file-item-animated" [style.animation-delay.s]="i * 0.03">
+        <div class="file-icon" slot="start">
+          <img *ngIf="file.thumbnailUri" [src]="file.thumbnailUri" class="thumbnail" />
+          <ion-icon *ngIf="!file.thumbnailUri" [name]="getFileIcon(file.mimeType)"></ion-icon>
+          <div *ngIf="file.duration" class="duration-badge">
+            {{ formatDuration(file.duration) }}
+          </div>
+        </div>
+        <ion-label>
+          <h3>{{ file.name }}</h3>
+          <p>
+            {{ formatDate(file.dateModified) }}
+            <span *ngIf="file.width && file.height"> • {{ file.width }}×{{ file.height }}</span>
+          </p>
+        </ion-label>
+        <div class="file-size" slot="end">
+          {{ formatBytes(file.size) }}
+        </div>
+      </ion-item>
+
+      <ion-item-options side="end">
+        <ion-item-option color="primary" (click)="shareFile(file)">
+          <ion-icon slot="icon-only" name="share-outline"></ion-icon>
+        </ion-item-option>
+        <ion-item-option color="danger" (click)="deleteFile(file)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
+  </div>
+</ion-content>

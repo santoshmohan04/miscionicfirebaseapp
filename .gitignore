@@ -68,3 +68,10 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+saf-file-ops/node_modules/
+saf-file-ops/dist/
+saf-file-ops/android/build/
+saf-file-ops/android/app/build/
+saf-file-ops/ios/Pods/
+saf-file-ops/ios/build/
+saf-file-ops/*.log

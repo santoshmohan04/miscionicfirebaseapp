@@ -1,28 +1,21 @@
 import { Routes } from '@angular/router';
-import { DetailPage } from './pages/detail/detail.page';
-import { CreatePage } from './pages/create/create.page';
-import { HomePage } from './home/home.page';
 
 export const routes: Routes = [
   {
-    path: 'home',
-    component: HomePage,
-  },
-  {
     path: '',
-    redirectTo: 'home',
+    redirectTo: 'dashboard',
     pathMatch: 'full',
   },
   {
-    path: 'create',
-    component: CreatePage,
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.page').then((m) => m.DashboardPage),
   },
   {
-    path: 'detail',
-    component: DetailPage,
+    path: 'category/:type',
+    loadComponent: () => import('./category-detail/category-detail.page').then((m) => m.CategoryDetailPage),
   },
   {
-    path: 'detail/:id',
-    component: DetailPage,
+    path: 'explorer',
+    loadComponent: () => import('./file-explorer/pages/explorer.page').then((m) => m.ExplorerPage),
   },
 ];

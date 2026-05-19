@@ -1,0 +1,229 @@
+  <ion-header [translucent]="true">
+    <ion-toolbar>
+      <ion-title>Storage</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="openThemeSelector($event)">
+          <ion-icon [name]="getThemeIcon()"></ion-icon>
+        </ion-button>
+        <ion-button (click)="loadStats()" [disabled]="loading()">
+          <ion-icon name="refresh-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <!-- Skeleton Loaders -->
+    <div class="skeleton-container">
+      <!-- Hero Skeleton -->
+      <div class="skeleton-hero">
+        <div class="skeleton-circle"></div>
+        <div class="skeleton-text-group">
+          <div class="skeleton-text skeleton-text-lg"></div>
+          <div class="skeleton-text skeleton-text-sm"></div>
+        </div>
+      </div>
+
+      <!-- Stats Skeleton -->
+      <div class="skeleton-stats">
+        <div class="skeleton-stat-card" *ngFor="let i of [1,2,3]">
+          <div class="skeleton-icon"></div>
+          <div class="skeleton-text-group">
+            <div class="skeleton-text skeleton-text-md"></div>
+            <div class="skeleton-text skeleton-text-xs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Cards Skeleton -->
+      <div class="skeleton-categories">
+        <div class="skeleton-heading"></div>
+        <div class="skeleton-card" *ngFor="let i of [1,2,3,4]">
+          <div class="skeleton-card-icon"></div>
+          <div class="skeleton-card-content">
+            <div class="skeleton-text skeleton-text-md"></div>
+            <div class="skeleton-text skeleton-text-xs"></div>
+          </div>
+          <div class="skeleton-text skeleton-text-sm"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State (Permission Required) -->
+  <div *ngIf="!loading() && error()" class="error-state">
+    <div class="error-animation">
+      <div class="error-icon-wrapper">
+        <ion-icon name="lock-closed-outline" class="lock-icon"></ion-icon>
+        <ion-icon name="folder-outline" class="folder-icon"></ion-icon>
+      </div>
+    </div>
+    <h2>Storage Access Required</h2>
+    <p>Grant storage permissions to view your storage statistics and manage files.</p>
+    <ion-button (click)="requestPermissionsAndLoad()" expand="block" class="retry-button" shape="round">
+      <ion-icon name="settings-outline" slot="start"></ion-icon>
+      Grant Permission
+    </ion-button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading() && !error() && stats()" class="dashboard-content" [class.loaded]="contentLoaded()">
+    <!-- Hero Section: Circular Progress -->
+    <div class="hero-section animate-hero">
+      <app-circular-progress
+        [percentage]="usagePercentage()"
+        [size]="220"
+        [strokeWidth]="18"
+        label="Used"
+      ></app-circular-progress>
+      <div class="storage-summary">
+        <h2>{{ formatBytes(stats().usedSpace) }}</h2>
+        <p>of {{ formatBytes(stats().totalSpace) }}</p>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+      <div class="stat-card animate-stat" style="animation-delay: 0.1s">
+        <ion-icon name="server-outline" color="primary"></ion-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ formatBytes(stats().totalSpace) }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="stat-card animate-stat" style="animation-delay: 0.15s">
+        <ion-icon name="albums-outline" color="warning"></ion-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ formatBytes(stats().usedSpace) }}</div>
+          <div class="stat-label">Used</div>
+        </div>
+      </div>
+      <div class="stat-card animate-stat" style="animation-delay: 0.2s">
+        <ion-icon name="cloud-outline" color="success"></ion-icon>
+        <div class="stat-info">
+          <div class="stat-value">{{ formatBytes(stats().freeSpace) }}</div>
+          <div class="stat-label">Free</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Storage Breakdown Bar -->
+    <div class="breakdown-section animate-breakdown" style="animation-delay: 0.25s">
+      <h3>Storage Breakdown</h3>
+      <div class="breakdown-bar">
+        <div 
+          *ngFor="let cat of categories(); let i = index"
+          class="breakdown-segment"
+          [style.width.%]="getCategoryPercentage(cat.size)"
+          [style.background]="cat.color"
+          [style.animation-delay.s]="0.3 + (i * 0.05)"
+          [title]="cat.name + ': ' + formatBytes(cat.size)"
+        ></div>
+      </div>
+      <div class="breakdown-legend">
+        <div *ngFor="let cat of categories(); let i = index" 
+             class="legend-item"
+             [style.animation-delay.s]="0.4 + (i * 0.05)">
+          <span class="legend-color" [style.background]="cat.color"></span>
+          <span class="legend-text">{{ cat.name }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="categories-section">
+      <h3 class="animate-heading" style="animation-delay: 0.5s">Categories</h3>
+      <app-storage-card
+        *ngFor="let cat of categories(); let i = index"
+        [icon]="cat.icon"
+        [categoryName]="cat.name"
+        [fileCount]="cat.count"
+        [size]="formatBytes(cat.size)"
+        [percentage]="getCategoryPercentage(cat.size)"
+        [routerLink]="cat.route"
+        [gradientColor]="cat.gradient"
+        [progressColor]="cat.color"
+        class="animate-card"
+        [style.animation-delay.s]="0.55 + (i * 0.05)"
+      ></app-storage-card>
+    </div>
+
+    <!-- Analytics Widgets -->
+    <div class="analytics-section">
+      <!-- Largest Files Widget -->
+      <div class="analytics-widget animate-widget" *ngIf="largestFiles.length > 0" style="animation-delay: 0.75s">
+        <div class="widget-header">
+          <h3>
+            <ion-icon name="trending-down-outline"></ion-icon>
+            Largest Files
+          </h3>
+          <p>Top files consuming space</p>
+        </div>
+        <div class="largest-files-list">
+          <div 
+            *ngFor="let file of largestFiles(); let i = index" 
+            class="file-item animate-list-item"
+            [routerLink]="getCategoryRoute(file.category)"
+            [style.animation-delay.s]="0.8 + (i * 0.03)"
+          >
+            <div class="file-icon-wrapper">
+              <ion-icon [name]="getCategoryIcon(file.mimeType) + '-outline'"></ion-icon>
+            </div>
+            <div class="file-info">
+              <div class="file-name">{{ file.name }}</div>
+              <div class="file-meta">
+                <span class="file-category">{{ getCategoryName(file.category) }}</span>
+              </div>
+            </div>
+            <div class="file-size-large">{{ formatBytes(file.size) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations Widget -->
+      <div class="analytics-widget recommendations-widget animate-widget" *ngIf="recommendations.length > 0" style="animation-delay: 1s">
+        <div class="widget-header">
+          <h3>
+            <ion-icon name="bulb-outline"></ion-icon>
+            Smart Recommendations
+          </h3>
+          <p>Tips to optimize your storage</p>
+        </div>
+        <div class="recommendations-list">
+          <div *ngFor="let rec of recommendations(); let i = index" 
+               class="recommendation-item animate-list-item"
+               [style.animation-delay.s]="1.05 + (i * 0.05)">
+            <div class="rec-icon" [class]="'rec-icon-' + rec.color">
+              <ion-icon [name]="rec.icon + '-outline'"></ion-icon>
+            </div>
+            <div class="rec-content">
+              <div class="rec-title">{{ rec.title }}</div>
+              <div class="rec-description">{{ rec.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="actions-section animate-actions" style="animation-delay: 1.2s">
+      <h3>Quick Actions</h3>
+      <ion-card button="true" routerLink="/explorer" class="action-card">
+        <div class="action-content">
+          <ion-icon name="folder-open-outline" color="primary"></ion-icon>
+          <div class="action-info">
+            <div class="action-title">Browse Files</div>
+            <div class="action-subtitle">Explore all your files and folders</div>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="chevron"></ion-icon>
+        </div>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>
