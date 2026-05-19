@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { FilesystemService } from './filesystem.service';
-import { FileItem } from 'src/app/file-explorer/pages/explorer-model';
+import { FileItem } from 'src/app/file-explorer/models/explorer-model';
 
 interface PathNode {
   uri: string;

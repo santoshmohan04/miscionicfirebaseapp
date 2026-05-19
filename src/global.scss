@@ -32,6 +32,70 @@
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
+/* Import class-based dark mode for manual theme switching */
+@import "@ionic/angular/css/palettes/dark.class.css";
+
+/* Theme mode classes for body element */
+body.theme-light {
+  color-scheme: light;
+  
+  --ion-background-color: #ffffff;
+  --ion-text-color: #000000;
+  --ion-toolbar-background: #f8f8f8;
+  --ion-card-background: #ffffff;
+}
+
+body.theme-dark {
+  color-scheme: dark;
+  
+  --ion-background-color: #121212;
+  --ion-text-color: #ffffff;
+  --ion-toolbar-background: #1e1e1e;
+  --ion-card-background: #1e1e1e;
+}
+
+body.theme-auto {
+  color-scheme: light dark;
+}
+
+/* Smooth theme transitions */
+body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+ion-content,
+ion-header,
+ion-toolbar,
+ion-card,
+ion-item {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Force proper text visibility */
+ion-title,
+ion-label,
+ion-text,
+h1, h2, h3, h4, h5, h6,
+p, span, div {
+  color: var(--ion-text-color);
+}
+
+/* Ensure back button is always visible */
+ion-back-button {
+  --color: var(--ion-color-primary) !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Custom theme popover styles */
+.theme-popover {
+  --width: auto;
+  --max-width: 400px;
+  --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  --border-radius: 16px;
+  
+  &::part(content) {
+    border-radius: 16px;
+  }
+}
+

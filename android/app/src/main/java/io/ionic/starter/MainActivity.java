@@ -7,6 +7,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         registerPlugin(com.mycompany.saffileops.SafFileOpsPlugin.class);
+        registerPlugin(StorageStatsPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

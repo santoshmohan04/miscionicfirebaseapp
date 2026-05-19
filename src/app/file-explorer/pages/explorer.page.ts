@@ -2,6 +2,7 @@ import {
   Component,
   OnInit,
   AfterViewInit,
+  OnDestroy,
   ViewChildren,
   QueryList,
   ElementRef,
@@ -10,6 +11,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { map, take } from 'rxjs/operators';
 import { GestureController } from '@ionic/angular';
+import { App } from '@capacitor/app';
+import { PluginListenerHandle } from '@capacitor/core';
 
 import {
   IonHeader,
@@ -30,7 +33,7 @@ import {
   IonRippleEffect, IonSpinner } from '@ionic/angular/standalone';
 import { ModalController } from '@ionic/angular/standalone';
 import { ExplorerFacade } from '../store/explorer.facade';
-import { FileItem, ExplorerViewMode } from './explorer-model';
+import { FileItem, ExplorerViewMode } from '../models/explorer-model';
 import { FileDetailsComponent } from '../components/file-details/file-details.component';
 
 @Component({
@@ -58,11 +61,12 @@ import { FileDetailsComponent } from '../components/file-details/file-details.co
     IonSegmentButton,
   ],
 })
-export class ExplorerPage implements OnInit, AfterViewInit {
+export class ExplorerPage implements OnInit, AfterViewInit, OnDestroy {
   /* ===== Injected services ===== */
   facade = inject(ExplorerFacade);
   private gestureCtrl = inject(GestureController);
   private modalCtrl = inject(ModalController);
+  private appStateListener?: PluginListenerHandle;
 
   /* ===== Store streams ===== */
   files$ = this.facade.files$;
@@ -101,6 +105,28 @@ export class ExplorerPage implements OnInit, AfterViewInit {
 
     this.files$.subscribe((f) => (this.filesSnapshot = f));
     this.selectionMode$.subscribe((m) => (this.selectionModeSnapshot = m));
+    
+    this.setupAppStateListener();
+  }
+
+  ngOnDestroy() {
+    this.appStateListener?.remove();
+  }
+
+  private setupAppStateListener() {
+    // Reload file list when app resumes (after granting permissions)
+    App.addListener('appStateChange', async (state) => {
+      if (state.isActive) {
+        console.log('Explorer: App resumed, reloading files...');
+        this.currentPath$.pipe(take(1)).subscribe(path => {
+          if (!path || path === '/') {
+            this.facade.loadLocalRoots();
+          }
+        });
+      }
+    }).then(listener => {
+      this.appStateListener = listener;
+    });
     this.viewMode$.subscribe((v) => (this.viewModeSnapshot = v));
   }
 

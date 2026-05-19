@@ -1,4 +1,4 @@
-import { ExplorerViewMode, FileItem } from '../pages/explorer-model';
+import { ExplorerViewMode, FileItem } from '../models/explorer-model';
 
 export interface ExplorerState {
   files: FileItem[];

@@ -1,0 +1,37 @@
+<div class="theme-toggle-popover">
+  <div class="popover-header">
+    <h3>Theme</h3>
+    <ion-button fill="clear" size="small" (click)="dismiss()">
+      <ion-icon name="close-outline"></ion-icon>
+    </ion-button>
+  </div>
+  
+  <div class="theme-options">
+    <ion-item 
+      *ngFor="let option of themeOptions"
+      button
+      detail="false"
+      (click)="selectTheme(option)"
+      [class.active]="currentTheme() === option"
+    >
+      <div class="theme-option-content">
+        <div class="theme-icon-wrapper" [attr.data-theme]="option">
+          <ion-icon [name]="getThemeIcon(option)"></ion-icon>
+        </div>
+        <div class="theme-info">
+          <h4>{{ getThemeLabel(option) }}</h4>
+          <p *ngIf="option === 'auto'">Follows your system settings</p>
+          <p *ngIf="option === 'light'">Always use light theme</p>
+          <p *ngIf="option === 'dark'">Always use dark theme</p>
+        </div>
+      </div>
+      <ion-icon 
+        *ngIf="currentTheme() === option" 
+        name="checkmark-circle" 
+        color="primary" 
+        slot="end"
+        class="check-icon"
+      ></ion-icon>
+    </ion-item>
+  </div>
+</div>

@@ -1,9 +1,9 @@
 import { createReducer, on } from '@ngrx/store';
 import * as ExplorerActions from './explorer.actions';
 import { ExplorerState, initialExplorerState } from './explorer.state';
-import { CATEGORY_ITEMS } from '../file-categories';
-import { STORAGE_ROOTS } from '../storage-roots';
-import { ExplorerViewMode } from '../pages/explorer-model';
+import { CATEGORY_ITEMS } from '../../shared/constants/file-categories';
+import { STORAGE_ROOTS } from '../../shared/constants/storage-roots';
+import { ExplorerViewMode } from '../models/explorer-model';
 
 export const explorerReducer = createReducer<ExplorerState>(
   initialExplorerState,

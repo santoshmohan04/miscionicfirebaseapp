@@ -1,6 +1,6 @@
 // explorer.actions.ts
 import { createAction, props } from '@ngrx/store';
-import { FileItem } from '../pages/explorer-model';
+import { FileItem } from '../models/explorer-model';
 
 /* =======================
    FOLDER / FILE LOADING

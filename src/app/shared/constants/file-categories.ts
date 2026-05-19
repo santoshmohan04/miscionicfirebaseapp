@@ -1,4 +1,4 @@
-import { FileItem } from './pages/explorer-model';
+import { FileItem } from '../../file-explorer/models/explorer-model';
 
 export const CATEGORY_ITEMS: FileItem[] = [
   {

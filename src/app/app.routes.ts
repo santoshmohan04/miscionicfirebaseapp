@@ -1,9 +1,21 @@
 import { Routes } from '@angular/router';
-import { ExplorerPage } from './file-explorer/pages/explorer.page';
 
 export const routes: Routes = [
   {
     path: '',
-    component: ExplorerPage,
+    redirectTo: 'dashboard',
+    pathMatch: 'full',
+  },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.page').then((m) => m.DashboardPage),
+  },
+  {
+    path: 'category/:type',
+    loadComponent: () => import('./category-detail/category-detail.page').then((m) => m.CategoryDetailPage),
+  },
+  {
+    path: 'explorer',
+    loadComponent: () => import('./file-explorer/pages/explorer.page').then((m) => m.ExplorerPage),
   },
 ];

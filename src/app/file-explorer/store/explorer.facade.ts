@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Store } from '@ngrx/store';
 import * as ExplorerActions from './explorer.actions';
 import * as ExplorerSelectors from './explorer.selectors';
-import { ExplorerViewMode, FileItem } from '../pages/explorer-model';
+import { ExplorerViewMode, FileItem } from '../models/explorer-model';
 import { StoragePermissionService } from 'src/app/core/services/storage-permission.service';
 
 @Injectable({ providedIn: 'root' })

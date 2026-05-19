@@ -12,7 +12,7 @@ import {
   IonButton,
   ModalController,
 } from '@ionic/angular/standalone';
-import { FileItem } from '../../pages/explorer-model';
+import { FileItem } from '../../models/explorer-model';
 
 @Component({
   selector: 'app-file-details',
