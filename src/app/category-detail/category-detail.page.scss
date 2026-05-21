@@ -87,6 +87,9 @@ ion-header {
 
 // Sort Bar
 .sort-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   padding: 16px;
   background: var(--ion-card-background);
   margin-bottom: 8px;
@@ -542,4 +545,3 @@ ion-header {
 .file-list ion-item-sliding {
   animation: fadeIn 0.3s ease;
 }
-

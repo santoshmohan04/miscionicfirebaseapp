@@ -9,7 +9,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "android:logs": "powershell -ExecutionPolicy Bypass -File ./scripts/stream-android-logs.ps1",
+    "android:logs:errors": "powershell -ExecutionPolicy Bypass -File ./scripts/stream-android-logs.ps1 -ErrorsOnly",
+    "android:run:logs": "powershell -ExecutionPolicy Bypass -File ./scripts/run-and-stream-android-logs.ps1",
+    "android:run:logs:clear": "powershell -ExecutionPolicy Bypass -File ./scripts/run-and-stream-android-logs.ps1 -Clear"
   },
   "private": true,
   "dependencies": {

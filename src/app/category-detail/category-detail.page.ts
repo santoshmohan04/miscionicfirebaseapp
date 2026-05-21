@@ -1,7 +1,28 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute, RouterModule } from '@angular/router';
+import {
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonTitle,
+  IonContent,
+  IonRefresher,
+  IonRefresherContent,
+  IonIcon,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonButton,
+  IonItemSliding,
+  IonItem,
+  IonItemOptions,
+  IonItemOption,
+  ToastController,
+  IonImg
+} from '@ionic/angular/standalone';
+import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { FilesystemService } from '../core/services/filesystem.service';
 import StorageStats from '../plugins/storage-stats';
@@ -17,6 +38,11 @@ interface FileItem {
   duration?: number;
   width?: number;
   height?: number;
+  // Pre-computed fields for performance
+  formattedSize?: string;
+  formattedDate?: string;
+  formattedDuration?: string;
+  iconName?: string;
 }
 
 type SortOption = 'size' | 'name' | 'date';
@@ -26,7 +52,28 @@ type SortOption = 'size' | 'name' | 'date';
   templateUrl: './category-detail.page.html',
   styleUrls: ['./category-detail.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, RouterModule]
+  imports: [
+    CommonModule,
+    RouterModule,
+    IonHeader,
+    IonToolbar,
+    IonButtons,
+    IonBackButton,
+    IonTitle,
+    IonContent,
+    IonRefresher,
+    IonRefresherContent,
+    IonIcon,
+    IonSegment,
+    IonSegmentButton,
+    IonLabel,
+    IonButton,
+    IonItemSliding,
+    IonItem,
+    IonItemOptions,
+    IonItemOption,
+    IonImg
+  ]
 })
 export class CategoryDetailPage implements OnInit {
   // Using Angular Signals for reactive state management
@@ -75,7 +122,8 @@ export class CategoryDetailPage implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private filesystemService: FilesystemService
+    private filesystemService: FilesystemService,
+    private toastCtrl: ToastController
   ) {}
 
   async ngOnInit() {
@@ -155,8 +203,29 @@ export class CategoryDetailPage implements OnInit {
         console.warn('⚠️ No files returned for category:', this.categoryType());
       }
       
-      this.files.set(filesData);
-      this.totalFilesInStorage.set(filesData.length);
+      // Convert native content:// URIs to web-accessible URIs to prevent "Not allowed to load local resource"
+      const processedFiles = filesData.map((file: FileItem) => {
+        if (file.thumbnailUri) {
+          // HTML <img> tags cannot natively render raw video files (like .mp4) as images.
+          // We remove the URI for videos so the UI gracefully falls back to the video SVG icon.
+          if (file.mimeType && file.mimeType.startsWith('video/')) {
+            delete file.thumbnailUri;
+          } else {
+            file.thumbnailUri = Capacitor.convertFileSrc(file.thumbnailUri);
+          }
+        }
+        
+        // Pre-compute formatted values to prevent template function calls from lagging the UI
+        file.formattedSize = this.formatBytes(file.size);
+        file.formattedDate = this.formatDate(file.dateModified);
+        if (file.duration) file.formattedDuration = this.formatDuration(file.duration);
+        file.iconName = this.getFileIcon(file.mimeType || '');
+        
+        return file;
+      });
+      
+      this.files.set(processedFiles);
+      this.totalFilesInStorage.set(processedFiles.length);
       
       console.log('Total files in storage for', this.categoryType(), ':', filesData.length);
     } catch (error) {
@@ -231,14 +300,33 @@ export class CategoryDetailPage implements OnInit {
     return 'document-outline';
   }
 
+  trackByFileId(index: number, file: FileItem): string {
+    return file.id;
+  }
+
   async openFile(file: FileItem) {
     try {
       await Haptics.impact({ style: ImpactStyle.Light });
     } catch (e) {
       // Haptics not available
     }
-    // TODO: Implement file opening
-    console.log('Opening file:', file);
+
+    try {
+      await (StorageStats as any).openFile({
+        id: file.id,
+        category: this.categoryType(),
+        mimeType: file.mimeType || '*/*'
+      });
+    } catch (error) {
+      console.error('Error opening file:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'No app found to open this file type.',
+        duration: 3000,
+        position: 'bottom',
+        color: 'warning'
+      });
+      await toast.present();
+    }
   }
 
   async shareFile(file: FileItem) {

@@ -1,26 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { IonApp, IonRouterOutlet, AlertController } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { Capacitor, PluginListenerHandle } from '@capacitor/core';
+import { IonApp, IonRouterOutlet, AlertController, Platform } from '@ionic/angular/standalone';
+import { Capacitor } from '@capacitor/core';
 import { Filesystem } from '@capacitor/filesystem';
 import { App } from '@capacitor/app';
 import { Router } from '@angular/router';
 import StorageStats from './plugins/storage-stats';
 import { ThemeService } from './core/services/theme.service';
-import {
-  folderOutline,
-  imageOutline,
-  musicalNotesOutline,
-  videocamOutline,
-  documentTextOutline,
-  archiveOutline,
-  appsOutline,
-  searchOutline,
-  chevronForwardOutline,
-  menuOutline,
-  arrowBackOutline,
-  settingsOutline
-} from 'ionicons/icons';
+import { Subscription } from 'rxjs';
+import { registerIcons } from './icons';
 
 @Component({
     selector: 'app-root',
@@ -30,28 +17,16 @@ import {
     imports: [IonApp, IonRouterOutlet]
 })
 export class AppComponent implements OnInit, OnDestroy {
-  private backButtonListener?: PluginListenerHandle;
+  private backButtonSub?: Subscription;
 
   constructor(
     private alertController: AlertController,
     private router: Router,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private platform: Platform
   ) {
     // Theme service is auto-initialized via constructor
-    addIcons({
-      folderOutline,
-      imageOutline,
-      musicalNotesOutline,
-      videocamOutline,
-      documentTextOutline,
-      archiveOutline,
-      appsOutline,
-      searchOutline,
-      chevronForwardOutline,
-      menuOutline,
-      arrowBackOutline,
-      settingsOutline,
-    });
+    registerIcons();
   }
 
   async ngOnInit() {
@@ -60,23 +35,21 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.backButtonListener?.remove();
+    this.backButtonSub?.unsubscribe();
   }
 
   private setupBackButtonHandler() {
-    // Handle Android hardware back button
-    App.addListener('backButton', ({ canGoBack }) => {
-      console.log('Hardware back button pressed, canGoBack:', canGoBack);
+    // Handle Android hardware back button using Ionic's Platform service
+    this.backButtonSub = this.platform.backButton.subscribeWithPriority(10, (processNextHandler) => {
+      console.log('Hardware back button pressed, current URL:', this.router.url);
       
-      if (canGoBack) {
-        // Navigate back in the app
-        window.history.back();
-      } else {
-        // We're at the root, show exit confirmation
+      // Check if we are on the dashboard/root page
+      if (this.router.url === '/dashboard' || this.router.url === '/') {
         this.showExitConfirmation();
+      } else {
+        // Let Ionic safely handle popping the page or closing open overlays
+        processNextHandler();
       }
-    }).then(listener => {
-      this.backButtonListener = listener;
     });
   }
 

@@ -106,24 +106,24 @@
 
   <!-- File List -->
   <div *ngIf="!loading() && hasPermission() && files().length > 0" class="file-list">
-    <ion-item-sliding *ngFor="let file of filteredFiles(); let i = index">
+    <ion-item-sliding *ngFor="let file of filteredFiles(); let i = index; trackBy: trackByFileId">
       <ion-item (click)="openFile(file)" button="true" detail="false" class="file-item-animated" [style.animation-delay.s]="i * 0.03">
         <div class="file-icon" slot="start">
-          <img *ngIf="file.thumbnailUri" [src]="file.thumbnailUri" class="thumbnail" />
-          <ion-icon *ngIf="!file.thumbnailUri" [name]="getFileIcon(file.mimeType)"></ion-icon>
+          <ion-img *ngIf="file.thumbnailUri" [src]="file.thumbnailUri" class="thumbnail"></ion-img>
+          <ion-icon *ngIf="!file.thumbnailUri" [name]="file.iconName"></ion-icon>
           <div *ngIf="file.duration" class="duration-badge">
-            {{ formatDuration(file.duration) }}
+            {{ file.formattedDuration }}
           </div>
         </div>
         <ion-label>
           <h3>{{ file.name }}</h3>
           <p>
-            {{ formatDate(file.dateModified) }}
+            {{ file.formattedDate }}
             <span *ngIf="file.width && file.height"> • {{ file.width }}×{{ file.height }}</span>
           </p>
         </ion-label>
         <div class="file-size" slot="end">
-          {{ formatBytes(file.size) }}
+          {{ file.formattedSize }}
         </div>
       </ion-item>
 
