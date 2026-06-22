@@ -136,10 +136,12 @@ export const explorerReducer = createReducer<ExplorerState>(
   on(ExplorerActions.openCategory, (state, { category }) => ({
     ...state,
     viewMode: 'local' as ExplorerViewMode,
-    currentPath: category,
+    currentPath: `/category/${category}`,
+    loading: true,
+    files: [],
     selectionMode: false,
     selectedItems: [],
-    files: state.files.filter(f => f.category === category),
+    currentStorageLoading: null,
   })),
 
   /* =======================

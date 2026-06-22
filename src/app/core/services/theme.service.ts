@@ -1,4 +1,5 @@
 import { Injectable, signal, effect } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { Preferences } from '@capacitor/preferences';
 
 export type ThemeMode = 'light' | 'dark' | 'auto';
@@ -7,6 +8,8 @@ export type ThemeMode = 'light' | 'dark' | 'auto';
   providedIn: 'root'
 })
 export class ThemeService {
+  private readonly fallbackKey = 'theme-mode';
+
   // Signal for current theme mode
   private readonly themeMode = signal<ThemeMode>('auto');
   
@@ -30,8 +33,8 @@ export class ThemeService {
 
   private async initializeTheme() {
     try {
-      // Load saved preference
-      const { value } = await Preferences.get({ key: 'theme-mode' });
+      // Load saved preference (native Preferences when available, localStorage fallback otherwise)
+      const value = await this.readThemePreference();
       const savedMode = (value as ThemeMode) || 'light'; // Default to light instead of auto
       console.log('Loaded theme preference:', savedMode);
       this.themeMode.set(savedMode);
@@ -67,11 +70,7 @@ export class ThemeService {
 
   async setTheme(mode: ThemeMode) {
     try {
-      // Save preference
-      await Preferences.set({
-        key: 'theme-mode',
-        value: mode
-      });
+      await this.writeThemePreference(mode);
       
       // Update signal (this will trigger the effect to apply the theme)
       this.themeMode.set(mode);
@@ -80,6 +79,27 @@ export class ThemeService {
     } catch (error) {
       console.error('Error saving theme preference:', error);
     }
+  }
+
+  private async readThemePreference(): Promise<string | null> {
+    if (Capacitor.isPluginAvailable('Preferences')) {
+      const { value } = await Preferences.get({ key: this.fallbackKey });
+      return value;
+    }
+
+    return localStorage.getItem(this.fallbackKey);
+  }
+
+  private async writeThemePreference(mode: ThemeMode): Promise<void> {
+    if (Capacitor.isPluginAvailable('Preferences')) {
+      await Preferences.set({
+        key: this.fallbackKey,
+        value: mode,
+      });
+      return;
+    }
+
+    localStorage.setItem(this.fallbackKey, mode);
   }
 
   private applyTheme(mode: ThemeMode) {

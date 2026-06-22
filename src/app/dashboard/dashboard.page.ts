@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule, PopoverController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { PluginListenerHandle } from '@capacitor/core';
 import StorageStats from '../plugins/storage-stats';
@@ -95,6 +96,11 @@ export class DashboardPage implements OnInit, OnDestroy {
   }
 
   private setupAppStateListener() {
+    if (!Capacitor.isPluginAvailable('App')) {
+      console.warn('App plugin is not available; skipping app resume listener in Dashboard.');
+      return;
+    }
+
     // Listen for app resume (when user returns from settings)
     App.addListener('appStateChange', async (state) => {
       if (state.isActive) {

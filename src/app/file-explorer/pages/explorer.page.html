@@ -50,11 +50,11 @@
   <!-- ================= BREADCRUMBS ================= -->
   <ion-toolbar
     class="breadcrumb-bar"
-    *ngIf="(breadcrumbs$ | async)?.length"
+    *ngIf="(breadcrumbs$ | async) as breadcrumbs"
   >
-    <ion-buttons>
+    <ion-buttons *ngIf="breadcrumbs.length > 0">
       <ng-container
-        *ngFor="let crumb of breadcrumbs$ | async; let i = index; let last = last"
+        *ngFor="let crumb of breadcrumbs; let i = index; let last = last"
       >
         <ion-button fill="clear" (click)="navigateToCrumb(i)">
           {{ crumb }}
@@ -145,7 +145,7 @@
           *ngIf="(selectionMode$ | async) && item.selectable"
           slot="end"
           [checked]="item.selected"
-          (ionClick)="$event.stopPropagation(); toggleSelection(item)"
+          (click)="$event.stopPropagation(); toggleSelection(item)"
         ></ion-checkbox>
 
         <!-- Chevron when not selecting -->

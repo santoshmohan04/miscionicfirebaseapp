@@ -10,8 +10,10 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { map, take } from 'rxjs/operators';
-import { GestureController } from '@ionic/angular';
+import { Subscription } from 'rxjs';
+import { Gesture, GestureController } from '@ionic/angular';
 import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { PluginListenerHandle } from '@capacitor/core';
 
 import {
@@ -67,6 +69,8 @@ export class ExplorerPage implements OnInit, AfterViewInit, OnDestroy {
   private gestureCtrl = inject(GestureController);
   private modalCtrl = inject(ModalController);
   private appStateListener?: PluginListenerHandle;
+  private subs = new Subscription();
+  private gestures: Gesture[] = [];
 
   /* ===== Store streams ===== */
   files$ = this.facade.files$;
@@ -103,17 +107,25 @@ export class ExplorerPage implements OnInit, AfterViewInit, OnDestroy {
     this.facade.setViewMode('local');
     this.facade.loadLocalRoots();
 
-    this.files$.subscribe((f) => (this.filesSnapshot = f));
-    this.selectionMode$.subscribe((m) => (this.selectionModeSnapshot = m));
+    this.subs.add(this.files$.subscribe((f) => (this.filesSnapshot = f)));
+    this.subs.add(this.selectionMode$.subscribe((m) => (this.selectionModeSnapshot = m)));
+    this.subs.add(this.viewMode$.subscribe((v) => (this.viewModeSnapshot = v)));
     
     this.setupAppStateListener();
   }
 
   ngOnDestroy() {
     this.appStateListener?.remove();
+    this.subs.unsubscribe();
+    this.gestures.forEach(g => g.destroy());
   }
 
   private setupAppStateListener() {
+    if (!Capacitor.isPluginAvailable('App')) {
+      console.warn('App plugin is not available; skipping app resume listener in Explorer.');
+      return;
+    }
+
     // Reload file list when app resumes (after granting permissions)
     App.addListener('appStateChange', async (state) => {
       if (state.isActive) {
@@ -127,33 +139,50 @@ export class ExplorerPage implements OnInit, AfterViewInit, OnDestroy {
     }).then(listener => {
       this.appStateListener = listener;
     });
-    this.viewMode$.subscribe((v) => (this.viewModeSnapshot = v));
   }
 
   ngAfterViewInit() {
-    this.fileItems.changes.subscribe(() => this.attachLongPress());
+    this.subs.add(this.fileItems.changes.subscribe(() => this.attachLongPress()));
     this.attachLongPress();
   }
 
   private attachLongPress() {
+    // 1. Destroy existing gestures to prevent memory leaks when list changes
+    this.gestures.forEach(g => g.destroy());
+    this.gestures = [];
+
     if (this.viewModeSnapshot === 'category') return;
 
     this.fileItems.forEach((el, index) => {
       const item = this.filesSnapshot[index];
       if (!item?.selectable) return;
 
+      let timeoutId: any;
+
       const gesture = this.gestureCtrl.create({
         el: el.nativeElement,
         threshold: 0,
         gestureName: 'long-press',
         onStart: () => {
-          const item = this.filesSnapshot[index];
-          if (!item || item.isFolder) return;
-          this.openDetails(item);
+          // Trigger true long press after 500ms
+          timeoutId = setTimeout(() => {
+            const currentItem = this.filesSnapshot[index];
+            if (!currentItem || currentItem.isFolder) return;
+            this.openDetails(currentItem);
+          }, 500);
+        },
+        onMove: () => {
+          // Cancel if the user starts scrolling
+          if (timeoutId) clearTimeout(timeoutId);
+        },
+        onEnd: () => {
+          // Cancel if the user lifts finger before 500ms
+          if (timeoutId) clearTimeout(timeoutId);
         },
       });
 
       gesture.enable(true);
+      this.gestures.push(gesture);
     });
   }
 

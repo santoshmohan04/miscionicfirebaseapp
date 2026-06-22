@@ -83,10 +83,26 @@ export class ExplorerEffects {
       filter(([_, viewMode]) => viewMode === 'local'),
       tap(([{ path }]) => console.log('=== After viewMode filter - path:', path)),
       filter(([{ path }, _]) => path !== 'internal' && path !== 'external'), // Skip storage root items
+      filter(([{ path }, _]) => !path.startsWith('/category/')), // Skip virtual category routes
       tap(([{ path }]) => console.log('=== After path filter, proceeding with:', path)),
       switchMap(([{ path }]) =>
         from(this.local.openFolderByPath(path)).pipe(
           map(files => ExplorerActions.loadFolderSuccess({ files })),
+          catchError(() => of(ExplorerActions.loadFolderFailure()))
+        )
+      )
+    )
+  );
+
+  /* =====================================================
+     CATEGORY VIEW - OPEN CATEGORY
+     ===================================================== */
+  openCategory$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(ExplorerActions.openCategory),
+      switchMap(({ category }) =>
+        from(this.fs.getExplorerFilesByCategory(category)).pipe(
+          map((files) => ExplorerActions.loadFolderSuccess({ files })),
           catchError(() => of(ExplorerActions.loadFolderFailure()))
         )
       )
@@ -99,15 +115,22 @@ export class ExplorerEffects {
   navigateUp$ = createEffect(() =>
     this.actions$.pipe(
       ofType(ExplorerActions.navigateUp),
-      withLatestFrom(this.store.select(ExplorerSelectors.selectViewMode)),
+      withLatestFrom(
+        this.store.select(ExplorerSelectors.selectViewMode),
+        this.store.select(ExplorerSelectors.selectCurrentPath)
+      ),
       filter(([_, viewMode]) => viewMode === 'local'),
-      switchMap(() =>
-        from(this.local.goBack()).pipe(
+      switchMap(([_, __, currentPath]) => {
+        if (currentPath.startsWith('/category/')) {
+          return of(ExplorerActions.loadCategoryView());
+        }
+
+        return from(this.local.goBack()).pipe(
           filter((files): files is any[] => files !== null),
           map(files => ExplorerActions.loadFolderSuccess({ files })),
           catchError(() => of(ExplorerActions.loadFolderFailure()))
-        )
-      )
+        );
+      })
     )
   );
 

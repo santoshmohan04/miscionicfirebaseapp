@@ -20,6 +20,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.PermissionState;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.ActivityCallback;
+import androidx.activity.result.ActivityResult;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
@@ -260,8 +262,7 @@ public class StorageStatsPlugin extends Plugin {
             try {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                 intent.setData(Uri.parse("package:" + getContext().getPackageName()));
-                getActivity().startActivity(intent);
-                call.resolve();
+                startActivityForResult(call, intent, "manageStoragePermCallback");
             } catch (Exception e) {
                 call.reject("Failed to open settings", e);
             }
@@ -281,6 +282,50 @@ public class StorageStatsPlugin extends Plugin {
             call.resolve();
         } else {
             call.reject("Storage permission denied");
+        }
+    }
+
+    @ActivityCallback
+    private void manageStoragePermCallback(PluginCall call, ActivityResult result) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
+            call.resolve();
+        } else {
+            call.reject("Storage permission denied");
+        }
+    }
+
+    @PluginMethod
+    public void openFile(PluginCall call) {
+        String idStr = call.getString("id");
+        String category = call.getString("category");
+        String mimeType = call.getString("mimeType", "*/*");
+
+        if (idStr == null || category == null) {
+            call.reject("File ID and category are required");
+            return;
+        }
+
+        try {
+            long id = Long.parseLong(idStr);
+            Uri contentUri = getCategoryContentUri(category);
+
+            if (contentUri == null) {
+                call.reject("Invalid category: " + category);
+                return;
+            }
+
+            Uri fileUri = android.content.ContentUris.withAppendedId(contentUri, id);
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(fileUri, mimeType);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+            getContext().startActivity(intent);
+            call.resolve();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to open file", e);
+            call.reject("Failed to open file", e);
         }
     }
 
@@ -346,7 +391,6 @@ public class StorageStatsPlugin extends Plugin {
         Log.d(TAG, "Querying category: " + category + " with limit: " + limit);
         
         String[] projection = getProjectionForCategory(category, contentUri);
-        String sortOrder = MediaStore.MediaColumns.DATE_MODIFIED + " DESC LIMIT " + limit;
         
         // Add selection for downloads on older Android versions
         String selection = null;
@@ -359,13 +403,22 @@ public class StorageStatsPlugin extends Plugin {
             Log.d(TAG, "Using path filter for downloads on Android < Q");
         }
 
-        try (Cursor cursor = getContext().getContentResolver().query(
-                contentUri,
-                projection,
-                selection,
-                selectionArgs,
-                sortOrder
-        )) {
+        Cursor queryCursor;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            android.os.Bundle queryArgs = new android.os.Bundle();
+            if (selection != null) {
+                queryArgs.putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, selection);
+                queryArgs.putStringArray(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs);
+            }
+            queryArgs.putString(android.content.ContentResolver.QUERY_ARG_SQL_SORT_ORDER, MediaStore.MediaColumns.DATE_MODIFIED + " DESC");
+            queryArgs.putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, limit);
+            queryCursor = getContext().getContentResolver().query(contentUri, projection, queryArgs, null);
+        } else {
+            String sortOrder = MediaStore.MediaColumns.DATE_MODIFIED + " DESC LIMIT " + limit;
+            queryCursor = getContext().getContentResolver().query(contentUri, projection, selection, selectionArgs, sortOrder);
+        }
+
+        try (Cursor cursor = queryCursor) {
             if (cursor != null) {
                 Log.d(TAG, "Cursor count: " + cursor.getCount());
                 int idColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID);
