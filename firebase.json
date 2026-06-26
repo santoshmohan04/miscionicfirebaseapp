@@ -1,0 +1,40 @@
+{
+  "projects": {
+    "default": "YOUR_FIREBASE_PROJECT_ID"
+  },
+  "targets": {
+    "YOUR_FIREBASE_PROJECT_ID": {
+      "hosting": {
+        "app": [
+          "web"
+        ]
+      },
+      "storage": {
+        "default": "YOUR_FIREBASE_PROJECT_ID.appspot.com"
+      }
+    }
+  },
+  "firebaserc": "YOUR_FIREBASE_PROJECT_ID",
+  "hosting": [
+    {
+      "target": "app",
+      "public": "www/browser",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ],
+  "appDistribution": {
+    "app": "com.miscioni.filemanager",
+    "serviceCredentialsFile": "./.firebaserc",
+    "releaseNotes": "Release notes can be managed via Firebase Console or in deployment scripts"
+  }
+}
