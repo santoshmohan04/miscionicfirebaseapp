@@ -75,3 +75,18 @@ saf-file-ops/android/app/build/
 saf-file-ops/ios/Pods/
 saf-file-ops/ios/build/
 saf-file-ops/*.log
+
+# Firebase & Android sensitive files
+android/app/google-services.json
+*.keystore
+*.jks
+signing.properties
+local.properties
+android/.gradle
+android/build/
+android/app/build/
+
+# Gradle files
+.gradle
+gradle-app.setting
+gradle-wrapper.jar

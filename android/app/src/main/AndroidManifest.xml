@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.miscioni.filemanager">
 
     <application
         android:requestLegacyExternalStorage="true"
@@ -38,21 +39,22 @@
 
     <!-- Permissions -->
 
+    <!-- Internet permission required for Firebase services -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Android 13+ -->
+    
+    <!-- Storage permissions for file manager functionality -->
+    <!-- Android 13+ (API 33+) - Granular media permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
-    <!-- Android 12 and below (fallback) -->
+    <!-- Android 12 and below (fallback) - Legacy storage permissions -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <!-- File Manager permission for Android 11+ -->
-    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" 
-        tools:ignore="ScopedStorage" 
-        xmlns:tools="http://schemas.android.com/tools" />
+    <!-- File Manager permission for Android 11+ (SAF support) -->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
 </manifest>
