@@ -18,19 +18,27 @@ android {
     }
 
     // Signing configuration for release builds
-    // IMPORTANT: Create a keystore file by running:
-    // keytool -genkey -v -keystore miscioni-release.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias miscioni-key
-    // Store the keystore file outside the repository and set up in your build environment
     signingConfigs {
         release {
-            // Configure these with environment variables or a signing.properties file
-            // storeFile file("${rootDir}/miscioni-release.keystore")
-            // storePassword System.getenv("KEYSTORE_PASSWORD")
-            // keyAlias System.getenv("KEYSTORE_ALIAS")
-            // keyPassword System.getenv("KEYSTORE_ALIAS_PASSWORD")
-            
-            // Alternatively, read from a properties file (add to .gitignore)
-            // See FIREBASE_APK_BUILD.md for setup instructions
+            def signingFile = rootProject.file("signing.properties")
+            if (signingFile.exists()) {
+                def signingProps = new Properties()
+                signingFile.withInputStream { stream -> signingProps.load(stream) }
+                storeFile file(signingProps['storeFile'])
+                storePassword signingProps['storePassword']
+                keyAlias signingProps['keyAlias']
+                keyPassword signingProps['keyPassword']
+            } else if (
+                System.getenv("KEYSTORE_PATH") &&
+                System.getenv("KEYSTORE_PASSWORD") &&
+                System.getenv("KEYSTORE_ALIAS") &&
+                System.getenv("KEYSTORE_ALIAS_PASSWORD")
+            ) {
+                storeFile file(System.getenv("KEYSTORE_PATH"))
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEYSTORE_ALIAS")
+                keyPassword System.getenv("KEYSTORE_ALIAS_PASSWORD")
+            }
         }
     }
 

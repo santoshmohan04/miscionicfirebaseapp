@@ -22,6 +22,3 @@ project(':capacitor-status-bar').projectDir = new File('../node_modules/@capacit
 
 include ':saf-file-ops'
 project(':saf-file-ops').projectDir = new File('../saf-file-ops/android')
-
-include ':saf-picker'
-project(':saf-picker').projectDir = new File('../saf-picker/android')
