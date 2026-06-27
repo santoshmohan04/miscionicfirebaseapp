@@ -4,6 +4,9 @@
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
   "scripts": {
+    "prepare:plugins": "npm --prefix ./saf-file-ops run build",
+    "prestart": "npm run prepare:plugins",
+    "prebuild": "npm run prepare:plugins",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",

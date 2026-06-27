@@ -14,8 +14,4 @@ export const routes: Routes = [
     path: 'category/:type',
     loadComponent: () => import('./category-detail/category-detail.page').then((m) => m.CategoryDetailPage),
   },
-  {
-    path: 'explorer',
-    loadComponent: () => import('./file-explorer/pages/explorer.page').then((m) => m.ExplorerPage),
-  },
 ];
