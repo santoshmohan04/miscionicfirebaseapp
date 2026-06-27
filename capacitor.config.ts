@@ -1,12 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'miscionicfirestore',
+  appId: 'com.miscioni.filemanager',
+  appName: 'Miscioni File Manager',
   webDir: 'www/browser',
   plugins: {
     SafPickerPlugin: {
-      packageName: 'com.mycompany.plugins.safpicker'
+      packageName: 'com.miscioni.filemanager.plugins.safpicker'
     }
   }
 };
