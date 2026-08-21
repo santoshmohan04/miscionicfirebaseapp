@@ -1,20 +1,19 @@
 {
   "projects": {
-    "default": "YOUR_FIREBASE_PROJECT_ID"
+    "default": "misc-ionic-mobile-app"
   },
   "targets": {
-    "YOUR_FIREBASE_PROJECT_ID": {
+    "misc-ionic-mobile-app": {
       "hosting": {
         "app": [
           "web"
         ]
       },
       "storage": {
-        "default": "YOUR_FIREBASE_PROJECT_ID.appspot.com"
+        "default": "misc-ionic-mobile-app.firebasestorage.app"
       }
     }
   },
-  "firebaserc": "YOUR_FIREBASE_PROJECT_ID",
   "hosting": [
     {
       "target": "app",
@@ -33,8 +32,7 @@
     }
   ],
   "appDistribution": {
-    "app": "com.miscioni.filemanager",
-    "serviceCredentialsFile": "./.firebaserc",
+    "app": "1:689975823115:android:36477be5ac6ceac56b300e",
     "releaseNotes": "Release notes can be managed via Firebase Console or in deployment scripts"
   }
 }

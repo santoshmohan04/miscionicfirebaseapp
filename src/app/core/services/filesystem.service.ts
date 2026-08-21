@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SafFileOps } from 'saf-file-ops';
-import { FileItem, FileType } from '../../file-explorer/models/explorer-model';
-import StorageStats from '../../plugins/storage-stats';
+import { FileItem, FileType } from 'src/app/file-explorer/models/explorer-model';
+import StorageStats from 'src/app/plugins/storage-stats';
 
 export interface SafRoot {
   uri: string;

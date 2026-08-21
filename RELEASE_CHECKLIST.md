@@ -1,6 +1,8 @@
 # Release Checklist - Miscioni File Manager
 
-Use this checklist before releasing any version to Google Play Store or Firebase App Distribution.
+Use this checklist before releasing any Android build to Google Play Store or Firebase App Distribution.
+
+> Firebase and Play publishing are release/distribution workflows, not the core app architecture. The product still functions as a local Android file manager using SAF and Capacitor.
 
 ## 📋 Pre-Release Verification (2-3 Days Before)
 

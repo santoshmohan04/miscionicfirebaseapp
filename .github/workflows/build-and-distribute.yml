@@ -1,0 +1,96 @@
+name: Build APK and Upload to Firebase
+
+on:
+  push:                    # Trigger on any push
+  workflow_dispatch:       # Allow manual trigger from GitHub UI
+
+permissions:
+  contents: read          # Read-only access to repository contents
+
+jobs:
+  build-and-distribute:
+    name: Build APK and Upload to Firebase
+    runs-on: ubuntu-latest
+
+    env:
+      # Tester group alias (NOT the display name) - must match Firebase console
+      FIREBASE_TESTER_GROUPS: qa-team
+
+    steps:
+      # Step 1: Checkout the code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      # Required for npm install and ionic/angular build
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm              # Cache npm packages for faster builds
+
+      # Step 3: Set up Java JDK
+      # Required by Gradle to compile Android code
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu      # Zulu is a reliable OpenJDK distribution
+          java-version: '21'      # Must match your project's requirements
+
+      # Step 4: Install npm dependencies
+      # Uses --legacy-peer-deps to handle peer dependency conflicts
+      # (common with older Angular ESLint versions)
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      # Step 5: Build the Ionic/Angular application
+      # Generates optimized web assets in the www/ directory
+      - name: Build Ionic app
+        run: npm run build
+
+      # Step 6: Ensure Android platform is added to Capacitor project
+      # This creates the android/ directory if it doesn't exist
+      - name: Ensure Android platform exists
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      # Step 7: Sync Capacitor with Android platform
+      # Copies the built web assets to the Android project
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      # Step 8: Add google-services.json if available
+      # This file contains Firebase configuration
+      # It's optional but required for Firebase features
+      - name: Add google-services.json (optional)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        if: ${{ env.GOOGLE_SERVICES_JSON != '' }}
+        run: |
+          printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+
+      # Step 9: Build Android APK
+      # Compiles the Android project into a debug APK
+      # Output: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Build Android debug APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      # Step 10: Upload APK to Firebase App Distribution
+      # Distributes the APK to testers via Firebase
+      # Includes release notes with branch and commit information
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIALS }}
+          groups: ${{ env.FIREBASE_TESTER_GROUPS }}
+          file: android/app/build/outputs/apk/debug/app-debug.apk
+          releaseNotes: |
+            Automated CI build from ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}

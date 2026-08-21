@@ -1,14 +1,14 @@
 # Firebase APK Generation Guide - Miscioni File Manager
 
-This document provides comprehensive instructions for building and releasing the Miscioni File Manager APK for Android through Firebase.
+This document covers the optional Firebase release pipeline for the Android app. The core application is a local Android file manager built around Storage Access Framework and Capacitor, while Firebase is used mainly for release distribution and optional app services.
 
 ## 📋 Overview
 
-The app is configured for:
+The project is configured for:
 - **Package Name**: `com.miscioni.filemanager`
 - **App Name**: Miscioni File Manager
 - **Build System**: Gradle with Capacitor
-- **Firebase Integration**: Enabled for Analytics, App Distribution, and Cloud Services
+- **Firebase Integration**: Optional for App Distribution, analytics, and related app services
 
 ## 🚀 Quick Start
 
