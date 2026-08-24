@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import androidx.activity.result.ActivityResult
 import androidx.documentfile.provider.DocumentFile
 import com.getcapacitor.*
 import com.getcapacitor.annotation.ActivityCallback
@@ -227,13 +228,8 @@ class SafFileOpsPlugin : Plugin() {
        HANDLE PICKER RESULT
        ========================= */
     @ActivityCallback
-    private fun pickRootResult(call: PluginCall?, result: Intent?) {
-        if (call == null) {
-            android.util.Log.e("SafFileOps", "Call is null in pickRootResult")
-            return
-        }
-
-        val uri = result?.data
+    private fun pickRootResult(call: PluginCall, result: ActivityResult) {
+        val uri = result.data?.data
         if (uri == null) {
             android.util.Log.e("SafFileOps", "No URI in result")
             call.reject("Picker cancelled or no URI returned")
