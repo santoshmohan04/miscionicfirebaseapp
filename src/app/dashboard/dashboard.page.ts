@@ -262,14 +262,34 @@ export class DashboardPage implements OnInit, OnDestroy {
   });
 
   async openThemeSelector(event: Event) {
-    const popover = await this.popoverController.create({
-      component: ThemeToggleComponent,
-      event: event,
-      translucent: true,
-      showBackdrop: true,
-      cssClass: 'theme-popover'
-    });
-    await popover.present();
+    console.log('[Dashboard] openThemeSelector called.');
+    try {
+      const popover = await this.popoverController.create({
+        component: ThemeToggleComponent,
+        event: event,
+        translucent: true,
+        showBackdrop: true,
+        cssClass: 'theme-popover'
+      });
+      console.log('[Dashboard] Popover created. Presenting...');
+      await popover.present();
+      console.log('[Dashboard] Popover presented.');
+    } catch (error) {
+      console.error('[Dashboard] Error creating or presenting popover:', error);
+    }
+  }
+
+  async openThemeSelectorWithHaptics(event: Event) {
+    console.log('[Dashboard] openThemeSelectorWithHaptics called.');
+    // Provide haptic feedback for a better user experience on physical devices
+    try {
+      await Haptics.impact({ style: ImpactStyle.Light });
+      console.log('[Dashboard] Haptic impact success.');
+    } catch (e) {
+      // Haptics not available or failed
+      console.warn('Haptics impact failed', e);
+    }
+    this.openThemeSelector(event);
   }
 
   getThemeIcon(): string {

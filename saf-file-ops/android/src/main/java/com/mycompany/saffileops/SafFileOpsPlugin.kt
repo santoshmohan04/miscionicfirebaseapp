@@ -2,11 +2,13 @@ package com.mycompany.saffileops
 
 import android.app.Activity
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
 import androidx.activity.result.ActivityResult
 import androidx.documentfile.provider.DocumentFile
-import com.getcapacitor.*
+import com.getcapacitor.JSObject
+import com.getcapacitor.Plugin
+import com.getcapacitor.PluginCall
+import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
 import org.json.JSONArray
@@ -229,10 +231,16 @@ class SafFileOpsPlugin : Plugin() {
        ========================= */
     @ActivityCallback
     private fun pickRootResult(call: PluginCall, result: ActivityResult) {
+        if (result.resultCode != Activity.RESULT_OK) {
+            android.util.Log.e("SafFileOps", "Picker cancelled or failed")
+            call.reject("Picker cancelled")
+            return
+        }
+
         val uri = result.data?.data
         if (uri == null) {
             android.util.Log.e("SafFileOps", "No URI in result")
-            call.reject("Picker cancelled or no URI returned")
+            call.reject("No URI returned")
             return
         }
 
@@ -248,7 +256,7 @@ class SafFileOpsPlugin : Plugin() {
             val ret = JSObject()
             ret.put("uri", uri.toString())
             ret.put("name", name)
-            
+
             android.util.Log.d("SafFileOps", "Picker result: uri=$uri, name=$name")
             call.resolve(ret)
         } catch (e: Exception) {
