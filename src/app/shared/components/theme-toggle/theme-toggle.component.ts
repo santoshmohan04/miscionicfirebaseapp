@@ -4,7 +4,7 @@ import { IonicModule, PopoverController } from '@ionic/angular';
 import { ThemeService, ThemeMode } from '../../../core/services/theme.service';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { addIcons } from 'ionicons';
-import { sunnyOutline, moonOutline, contrastOutline, checkmarkCircle } from 'ionicons/icons';
+import { sunnyOutline, moonOutline, contrastOutline, checkmarkCircle, closeOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-theme-toggle',
@@ -25,7 +25,8 @@ export class ThemeToggleComponent {
       'sunny-outline': sunnyOutline,
       'moon-outline': moonOutline,
       'contrast-outline': contrastOutline,
-      'checkmark-circle': checkmarkCircle
+      'checkmark-circle': checkmarkCircle,
+      'close-outline': closeOutline
     });
   }
 

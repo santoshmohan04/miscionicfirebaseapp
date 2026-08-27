@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IonApp, IonRouterOutlet, AlertController, Platform } from '@ionic/angular/standalone';
 import { Capacitor } from '@capacitor/core';
+import { StatusBar } from '@capacitor/status-bar';
 import { Filesystem } from '@capacitor/filesystem';
 import { App } from '@capacitor/app';
 import { Router } from '@angular/router';
@@ -32,6 +33,17 @@ export class AppComponent implements OnInit, OnDestroy {
   async ngOnInit() {
     // Permission handling moved to dashboard page to avoid race conditions
     this.setupBackButtonHandler();
+    await this.configureStatusBar();
+  }
+
+  private async configureStatusBar() {
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        await StatusBar.setOverlaysWebView({ overlay: false });
+      } catch (e) {
+        console.warn('StatusBar.setOverlaysWebView failed:', e);
+      }
+    }
   }
 
   ngOnDestroy() {

@@ -1,11 +1,11 @@
-  <ion-header [translucent]="true">
+  <ion-header [translucent]="true" class="dashboard-header">
     <ion-toolbar>
       <ion-title>Storage</ion-title>
       <ion-buttons slot="end">
-        <ion-button (click)="openThemeSelectorWithHaptics($event)">
+        <ion-button fill="clear" size="large" aria-label="Change theme" (click)="openThemeSelectorWithHaptics($event)">
           <ion-icon [name]="getThemeIcon()"></ion-icon>
         </ion-button>
-        <ion-button (click)="loadStats()" [disabled]="loading()">
+        <ion-button fill="clear" size="large" aria-label="Refresh storage stats" (click)="loadStats()" [disabled]="loading()">
           <ion-icon name="refresh-outline"></ion-icon>
         </ion-button>
       </ion-buttons>

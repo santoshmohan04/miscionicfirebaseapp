@@ -289,7 +289,7 @@ export class DashboardPage implements OnInit, OnDestroy {
       // Haptics not available or failed
       console.warn('Haptics impact failed', e);
     }
-    this.openThemeSelector(event);
+    await this.openThemeSelector(event);
   }
 
   getThemeIcon(): string {
