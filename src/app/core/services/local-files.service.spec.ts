@@ -13,7 +13,7 @@ describe('LocalFilesService', () => {
       'pickRootFolder',
       'readSafFolder',
     ]);
-    service = new LocalFilesService(filesystem);
+    service = new LocalFilesService(filesystem as unknown as FilesystemService);
   });
 
   it('rejects current URI access before a root has been opened', () => {
