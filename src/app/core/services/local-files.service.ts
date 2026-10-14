@@ -70,11 +70,10 @@ export class LocalFilesService {
       }
     }
 
+    const result = await this.fs.readSafFolder(root.uri);
     this.currentStorageName = storageName;
     this.pathStack = [{ uri: root.uri, name: root.name }];
     console.log('Path stack set:', this.pathStack);
-
-    const result = await this.fs.readSafFolder(this.currentUri);
     console.log('Folder read result:', result);
     return result;
   }
@@ -93,12 +92,17 @@ export class LocalFilesService {
   async openFolder(item: FileItem): Promise<FileItem[]> {
     if (!item.isFolder) return [];
 
+    if (this.pathStack.length === 0) {
+      throw new Error('Cannot open a folder before selecting a storage root');
+    }
+
+    const result = await this.fs.readSafFolder(item.path);
     this.pathStack.push({
       uri: item.path,
       name: item.name,
     });
 
-    return this.fs.readSafFolder(this.currentUri);
+    return result;
   }
 
   /* ==========================
@@ -106,9 +110,10 @@ export class LocalFilesService {
      ========================== */
   async goBack(): Promise<FileItem[] | null> {
     if (this.pathStack.length > 1) {
-      // Navigate up one folder
+      const parentUri = this.pathStack[this.pathStack.length - 2].uri;
+      const result = await this.fs.readSafFolder(parentUri);
       this.pathStack.pop();
-      return this.fs.readSafFolder(this.currentUri);
+      return result;
     }
     
     if (this.pathStack.length === 1) {
@@ -133,7 +138,11 @@ export class LocalFilesService {
      CURRENT SAF URI
      ========================== */
   get currentUri(): string {
-    return this.pathStack[this.pathStack.length - 1].uri;
+    const current = this.pathStack[this.pathStack.length - 1];
+    if (!current) {
+      throw new Error('No storage folder is open');
+    }
+    return current.uri;
   }
 
   /* ==========================
@@ -149,13 +158,25 @@ export class LocalFilesService {
      OPEN BY PATH (NgRx)
      ========================== */
   async openFolderByPath(path: string): Promise<FileItem[]> {
-    const name = path.split('/').pop() || 'Folder';
+    if (!path) {
+      throw new Error('Folder path is required');
+    }
 
+    if (this.pathStack.length === 0) {
+      throw new Error('Cannot navigate to a folder before selecting a storage root');
+    }
+
+    if (this.currentUri === path) {
+      return this.fs.readSafFolder(path);
+    }
+
+    const files = await this.fs.readSafFolder(path);
+    const name = path.split('/').pop() || 'Folder';
     this.pathStack.push({
       uri: path,
       name,
     });
 
-    return this.fs.readSafFolder(this.currentUri);
+    return files;
   }
 }

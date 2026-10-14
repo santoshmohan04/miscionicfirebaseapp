@@ -3,12 +3,10 @@ import { Store } from '@ngrx/store';
 import * as ExplorerActions from './explorer.actions';
 import * as ExplorerSelectors from './explorer.selectors';
 import { ExplorerViewMode, FileItem } from '../models/explorer-model';
-import { StoragePermissionService } from 'src/app/core/services/storage-permission.service';
 
 @Injectable({ providedIn: 'root' })
 export class ExplorerFacade {
   private store = inject(Store);
-  private permissionService = inject(StoragePermissionService);
 
   files$ = this.store.select(ExplorerSelectors.selectFiles);
   currentPath$ = this.store.select(ExplorerSelectors.selectCurrentPath);
@@ -16,20 +14,13 @@ export class ExplorerFacade {
   selectedCount$ = this.store.select(ExplorerSelectors.selectSelectedCount);
   hasAnySelection$ = this.store.select(ExplorerSelectors.selectHasAnySelection);
   viewMode$ = this.store.select(ExplorerSelectors.selectViewMode);
-  breadcrumbs$ = this.store.select(ExplorerSelectors.selectBreadcrumbs);
   clipboard$ = this.store.select(ExplorerSelectors.selectClipboard);
   isLoading$ = this.store.select(ExplorerSelectors.selectLoading);
   currentStorageLoading$ = this.store.select(ExplorerSelectors.selectCurrentStorageLoading);
 
   constructor() {}
 
-  async loadLocalRoots() {
-    const granted = await this.permissionService.check();
-    if (!granted) {
-      const allowed = await this.permissionService.request();
-      if (!allowed) return;
-    }
-
+  loadLocalRoots() {
     this.store.dispatch(ExplorerActions.loadLocalRoots());
   }
 

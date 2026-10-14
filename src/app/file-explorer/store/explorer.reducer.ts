@@ -15,7 +15,6 @@ export const explorerReducer = createReducer<ExplorerState>(
     ...state,
     viewMode: 'local' as ExplorerViewMode,
     currentPath: '/',
-    pathStack: [],
     files: STORAGE_ROOTS.map(r => ({
       ...r,
       selected: false,

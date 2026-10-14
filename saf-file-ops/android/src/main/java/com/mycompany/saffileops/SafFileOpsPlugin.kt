@@ -10,6 +10,7 @@ import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.IOException
 
 @CapacitorPlugin(name = "SafFileOps")
 class SafFileOpsPlugin : Plugin() {
@@ -37,7 +38,13 @@ class SafFileOpsPlugin : Plugin() {
                 val uri = Uri.parse(obj.getString("uri"))
 
                 val doc = DocumentFile.fromSingleUri(context, uri)
-                doc?.delete()
+                    ?: throw IOException("Unable to access file: $uri")
+                if (!doc.exists()) {
+                    throw IOException("File does not exist: $uri")
+                }
+                if (!doc.delete()) {
+                    throw IOException("Unable to delete file: $uri")
+                }
             }
             call.resolve()
         } catch (e: Exception) {
@@ -51,9 +58,9 @@ class SafFileOpsPlugin : Plugin() {
     @PluginMethod
     fun copyItems(call: PluginCall) {
         val items = call.getArray("items")
-        val targetUri = Uri.parse(call.getString("targetUri"))
+        val targetUri = call.getString("targetUri")?.let(Uri::parse)
 
-        if (items == null) {
+        if (items == null || targetUri == null) {
             call.reject("Invalid args")
             return
         }
@@ -62,12 +69,20 @@ class SafFileOpsPlugin : Plugin() {
             ?: return call.reject("Invalid target")
 
         try {
+            if (!targetDir.isDirectory || !targetDir.canWrite()) {
+                throw IOException("Target folder is not writable")
+            }
+
             for (i in 0 until items.length()) {
                 val obj = items.getJSONObject(i)
                 val srcUri = Uri.parse(obj.getString("uri"))
                 val name = obj.getString("name")
 
-                val src = DocumentFile.fromSingleUri(context, srcUri) ?: continue
+                val src = DocumentFile.fromSingleUri(context, srcUri)
+                    ?: throw IOException("Unable to access source file: $srcUri")
+                if (!src.exists() || src.isDirectory) {
+                    throw IOException("Source is missing or is not a file: $srcUri")
+                }
                 copyDocument(src, targetDir, name)
             }
             call.resolve()
@@ -82,9 +97,9 @@ class SafFileOpsPlugin : Plugin() {
     @PluginMethod
     fun moveItems(call: PluginCall) {
         val items = call.getArray("items")
-        val targetUri = Uri.parse(call.getString("targetUri"))
+        val targetUri = call.getString("targetUri")?.let(Uri::parse)
 
-        if (items == null) {
+        if (items == null || targetUri == null) {
             call.reject("Invalid args")
             return
         }
@@ -93,14 +108,24 @@ class SafFileOpsPlugin : Plugin() {
             ?: return call.reject("Invalid target")
 
         try {
+            if (!targetDir.isDirectory || !targetDir.canWrite()) {
+                throw IOException("Target folder is not writable")
+            }
+
             for (i in 0 until items.length()) {
                 val obj = items.getJSONObject(i)
                 val srcUri = Uri.parse(obj.getString("uri"))
                 val name = obj.getString("name")
 
-                val src = DocumentFile.fromSingleUri(context, srcUri) ?: continue
+                val src = DocumentFile.fromSingleUri(context, srcUri)
+                    ?: throw IOException("Unable to access source file: $srcUri")
+                if (!src.exists() || src.isDirectory) {
+                    throw IOException("Source is missing or is not a file: $srcUri")
+                }
                 copyDocument(src, targetDir, name)
-                src.delete()
+                if (!src.delete()) {
+                    throw IOException("Copy succeeded but source could not be deleted: $srcUri")
+                }
             }
             call.resolve()
         } catch (e: Exception) {
@@ -270,12 +295,32 @@ class SafFileOpsPlugin : Plugin() {
         name: String
     ) {
         val mime = src.type ?: "application/octet-stream"
-        val target = targetDir.createFile(mime, name) ?: return
+        var target: DocumentFile? = null
+        try {
+            val createdTarget = targetDir.createFile(mime, name)
+                ?: throw IOException("Unable to create destination file: $name")
+            target = createdTarget
 
-        context.contentResolver.openInputStream(src.uri).use { input ->
-            context.contentResolver.openOutputStream(target.uri).use { output ->
-                input?.copyTo(output!!)
+            val expectedLength = src.length()
+            val copiedLength = context.contentResolver.openInputStream(src.uri)?.use { input ->
+                context.contentResolver.openOutputStream(createdTarget.uri)?.use { output ->
+                    input.copyTo(output)
+                } ?: throw IOException("Unable to open destination file: $name")
+            } ?: throw IOException("Unable to open source file: ${src.uri}")
+
+            if (expectedLength > 0 &&
+                (copiedLength != expectedLength || createdTarget.length() != expectedLength)
+            ) {
+                throw IOException("Incomplete copy for source file: ${src.uri}")
             }
+            if (!createdTarget.exists()) {
+                throw IOException("Destination file was not created: $name")
+            }
+        } catch (e: Exception) {
+            if (target?.exists() == true && !target.delete()) {
+                throw IOException("Copy failed and partial destination could not be removed: $name", e)
+            }
+            throw e
         }
     }
 }

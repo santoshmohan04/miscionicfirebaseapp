@@ -61,11 +61,6 @@ export const selectHasAnySelection = createSelector(
   (has) => has
 );
 
-export const selectBreadcrumbs = createSelector(
-  selectExplorerState,
-  (state) => state.pathStack
-);
-
 export const selectClipboard = createSelector(
   selectExplorerState,
   (state) => state.clipboard
