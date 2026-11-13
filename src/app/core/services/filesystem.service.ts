@@ -8,6 +8,17 @@ export interface SafRoot {
   name: string;
 }
 
+export class StorageAccessError extends Error {
+  constructor(
+    readonly code: 'permission-denied' | 'query-failed',
+    message: string,
+    readonly originalError?: unknown,
+  ) {
+    super(message);
+    this.name = 'StorageAccessError';
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class FilesystemService {
   private readonly categoryMap: Record<string, string> = {
@@ -114,74 +125,40 @@ export class FilesystemService {
   }
 
   async getFilesByCategory(category: string): Promise<any[]> {
+    const nativeCategory = this.categoryMap[category] ?? category;
+
     try {
       console.log('=== Getting files by category ===');
       console.log('Category:', category);
-
-      const nativeCategory = this.categoryMap[category] ?? category;
 
       try {
         const permStatus = await StorageStats.checkStoragePermission();
         console.log('Permission status:', permStatus);
 
         if (!permStatus.granted) {
-          console.warn('Storage permission not granted, returning empty array');
-          return [];
+          throw new StorageAccessError('permission-denied', 'Storage permission not granted');
         }
       } catch (permError) {
+        if (permError instanceof StorageAccessError) throw permError;
         console.error('Error checking permissions:', permError);
-        return [];
+        throw new StorageAccessError('query-failed', 'Unable to check storage permission', permError);
       }
 
       console.log('Calling StorageStats.getFilesByCategory...');
       const result = await StorageStats.getFilesByCategory({ category: nativeCategory, limit: 10000 });
       console.log('Native plugin result:', result);
       console.log('Files count:', result.files?.length || 0);
-
-      if (result.files && result.files.length > 0) {
-        console.log('Returning', result.files.length, 'files from MediaStore');
-        return result.files;
-      }
-
-      console.log('No files returned from native plugin, using mock data');
-      return this.getMockFilesByCategory(nativeCategory);
+      return result.files ?? [];
     } catch (error) {
+      if (error instanceof StorageAccessError) throw error;
       console.error('Error getting files by category:', error);
-      console.log('Falling back to mock data due to error');
-      const nativeCategory = this.categoryMap[category] ?? category;
-      return this.getMockFilesByCategory(nativeCategory);
+      throw new StorageAccessError('query-failed', 'Unable to query files for category', error);
     }
   }
 
   async getExplorerFilesByCategory(category: string): Promise<FileItem[]> {
     const files = await this.getFilesByCategory(category);
     return files.map((file) => this.toExplorerItem(file));
-  }
-
-  private getMockFilesByCategory(category: string): any[] {
-    const now = Date.now();
-    const mockData: Record<string, any[]> = {
-      images: [
-        { id: '1', name: 'IMG_20260517_001.jpg', path: '/storage/emulated/0/DCIM/Camera/IMG_001.jpg', size: 2456789, mimeType: 'image/jpeg', dateModified: now - 86400000 },
-        { id: '2', name: 'Screenshot_20260516.png', path: '/storage/emulated/0/Pictures/Screenshots/Screenshot_001.png', size: 1234567, mimeType: 'image/png', dateModified: now - 172800000 },
-        { id: '3', name: 'Photo_2026.jpg', path: '/storage/emulated/0/DCIM/Photo.jpg', size: 3456789, mimeType: 'image/jpeg', dateModified: now - 259200000 },
-      ],
-      videos: [
-        { id: '4', name: 'VID_20260515_001.mp4', path: '/storage/emulated/0/DCIM/Camera/VID_001.mp4', size: 45678901, mimeType: 'video/mp4', dateModified: now - 345600000 },
-        { id: '5', name: 'Recording_001.mp4', path: '/storage/emulated/0/Movies/Recording.mp4', size: 67890123, mimeType: 'video/mp4', dateModified: now - 432000000 },
-      ],
-      audio: [
-        { id: '6', name: 'Song_001.mp3', path: '/storage/emulated/0/Music/Song.mp3', size: 4567890, mimeType: 'audio/mpeg', dateModified: now - 518400000 },
-        { id: '7', name: 'Recording_20260510.m4a', path: '/storage/emulated/0/Recordings/Recording.m4a', size: 2345678, mimeType: 'audio/mp4', dateModified: now - 604800000 },
-      ],
-      downloads: [
-        { id: '8', name: 'document.pdf', path: '/storage/emulated/0/Download/document.pdf', size: 1234567, mimeType: 'application/pdf', dateModified: now - 691200000 },
-        { id: '9', name: 'archive.zip', path: '/storage/emulated/0/Download/archive.zip', size: 23456789, mimeType: 'application/zip', dateModified: now - 777600000 },
-        { id: '10', name: 'app-release.apk', path: '/storage/emulated/0/Download/app.apk', size: 12345678, mimeType: 'application/vnd.android.package-archive', dateModified: now - 864000000 },
-      ],
-    };
-
-    return mockData[category] || [];
   }
 
   private toExplorerItem(file: any): FileItem {
