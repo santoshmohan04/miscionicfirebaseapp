@@ -2,6 +2,7 @@ import { registerPlugin } from '@capacitor/core';
 
 export interface FileInfo {
   id: string;
+  uri: string;
   name: string;
   path: string;
   size: number;
@@ -40,6 +41,7 @@ export interface StorageStatsPlugin {
   requestStoragePermission(): Promise<void>;
   getFilesByCategory(options: { category: string; limit?: number }): Promise<{ files: FileInfo[] }>;
   getLargestFiles(options: { limit?: number }): Promise<{ files: LargestFile[] }>;
+  shareFiles(options: { category: string; ids: string[]; mimeTypes: string[] }): Promise<void>;
 }
 
 const StorageStats = registerPlugin<StorageStatsPlugin>('StorageStats');

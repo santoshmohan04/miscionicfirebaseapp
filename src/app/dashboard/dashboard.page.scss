@@ -4,10 +4,12 @@ ion-content {
 }
 
 // Header styles
-ion-header {
+ion-header.dashboard-header {
   ion-toolbar {
     --background: var(--ion-toolbar-background);
     --color: var(--ion-text-color);
+    --padding-top: 6px;
+    --padding-end: 12px;
     
     ion-title {
       color: var(--ion-text-color);
@@ -17,6 +19,10 @@ ion-header {
     ion-buttons ion-button {
       --color: var(--ion-color-primary);
       color: var(--ion-color-primary);
+      --padding-start: 10px;
+      --padding-end: 10px;
+      min-width: 44px;
+      min-height: 44px;
     }
   }
 }
@@ -787,7 +793,7 @@ ion-header {
 }
 
 // Header toolbar buttons
-ion-header {
+ion-header.dashboard-header {
   ion-toolbar {
     ion-buttons {
       ion-button {

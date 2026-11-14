@@ -2,10 +2,13 @@ package com.mycompany.saffileops
 
 import android.app.Activity
 import android.content.Intent
-import android.content.SharedPreferences
 import android.net.Uri
+import androidx.activity.result.ActivityResult
 import androidx.documentfile.provider.DocumentFile
-import com.getcapacitor.*
+import com.getcapacitor.JSObject
+import com.getcapacitor.Plugin
+import com.getcapacitor.PluginCall
+import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.ActivityCallback
 import com.getcapacitor.annotation.CapacitorPlugin
 import org.json.JSONArray
@@ -21,6 +24,52 @@ class SafFileOpsPlugin : Plugin() {
         private const val ROOT_NAME_KEY = "root_name"
         private const val PICK_ROOT_REQUEST = "pickRootResult"
     }
+
+    @PluginMethod
+    fun renameMedia(call: PluginCall) {
+        try {
+            MediaFileOperations(context).rename(
+                requireArgument(call, "uri"),
+                requireArgument(call, "name"),
+                requireArgument(call, "newName")
+            )
+            call.resolve()
+        } catch (e: Exception) {
+            call.reject(e.message ?: "Unable to rename file", e)
+        }
+    }
+
+    @PluginMethod
+    fun deleteMedia(call: PluginCall) {
+        try {
+            MediaFileOperations(context).delete(
+                requireArgument(call, "uri"),
+                requireArgument(call, "name")
+            )
+            call.resolve()
+        } catch (e: Exception) {
+            call.reject(e.message ?: "Unable to delete file", e)
+        }
+    }
+
+    @PluginMethod
+    fun transferMedia(call: PluginCall) {
+        try {
+            MediaFileOperations(context).transfer(
+                requireArgument(call, "uri"),
+                requireArgument(call, "name"),
+                requireArgument(call, "targetUri"),
+                call.getString("existingUri"),
+                call.getBoolean("move") ?: throw IOException("Transfer mode is required")
+            )
+            call.resolve()
+        } catch (e: Exception) {
+            call.reject(e.message ?: "Unable to transfer file", e)
+        }
+    }
+
+    private fun requireArgument(call: PluginCall, name: String): String =
+        call.getString(name)?.takeIf { it.isNotBlank() } ?: throw IOException("$name is required")
 
     /* =========================
        DELETE
@@ -252,16 +301,17 @@ class SafFileOpsPlugin : Plugin() {
        HANDLE PICKER RESULT
        ========================= */
     @ActivityCallback
-    private fun pickRootResult(call: PluginCall?, result: Intent?) {
-        if (call == null) {
-            android.util.Log.e("SafFileOps", "Call is null in pickRootResult")
+    private fun pickRootResult(call: PluginCall, result: ActivityResult) {
+        if (result.resultCode != Activity.RESULT_OK) {
+            android.util.Log.e("SafFileOps", "Picker cancelled or failed")
+            call.reject("Picker cancelled")
             return
         }
 
-        val uri = result?.data
+        val uri = result.data?.data
         if (uri == null) {
             android.util.Log.e("SafFileOps", "No URI in result")
-            call.reject("Picker cancelled or no URI returned")
+            call.reject("No URI returned")
             return
         }
 
@@ -277,7 +327,7 @@ class SafFileOpsPlugin : Plugin() {
             val ret = JSObject()
             ret.put("uri", uri.toString())
             ret.put("name", name)
-            
+
             android.util.Log.d("SafFileOps", "Picker result: uri=$uri, name=$name")
             call.resolve(ret)
         } catch (e: Exception) {

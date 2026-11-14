@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, PopoverController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
+import { PopoverController } from '@ionic/angular/standalone';
 import { RouterModule } from '@angular/router';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -262,14 +263,29 @@ export class DashboardPage implements OnInit, OnDestroy {
   });
 
   async openThemeSelector(event: Event) {
-    const popover = await this.popoverController.create({
-      component: ThemeToggleComponent,
-      event: event,
-      translucent: true,
-      showBackdrop: true,
-      cssClass: 'theme-popover'
+    console.log('[Dashboard] openThemeSelector called.');
+    try {
+      const popover = await this.popoverController.create({
+        component: ThemeToggleComponent,
+        event: event,
+        translucent: true,
+        showBackdrop: true,
+        cssClass: 'theme-popover'
+      });
+      console.log('[Dashboard] Popover created. Presenting...');
+      await popover.present();
+      console.log('[Dashboard] Popover presented.');
+    } catch (error) {
+      console.error('[Dashboard] Error creating or presenting popover:', error);
+    }
+  }
+
+  async openThemeSelectorWithHaptics(event: Event) {
+    console.log('[Dashboard] openThemeSelectorWithHaptics called.');
+    void Haptics.impact({ style: ImpactStyle.Light }).catch((error) => {
+      console.warn('Haptics impact failed', error);
     });
-    await popover.present();
+    await this.openThemeSelector(event);
   }
 
   getThemeIcon(): string {

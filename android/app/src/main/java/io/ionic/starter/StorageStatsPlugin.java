@@ -2,6 +2,7 @@ package io.ionic.starter;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.ClipData;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -330,6 +331,45 @@ public class StorageStatsPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void shareFiles(PluginCall call) {
+        String category = call.getString("category");
+        com.getcapacitor.JSArray ids = call.getArray("ids");
+        com.getcapacitor.JSArray mimeTypes = call.getArray("mimeTypes");
+        Uri collection = category == null ? null : getCategoryContentUri(category);
+        if (collection == null || ids == null || ids.length() == 0 ||
+            mimeTypes == null || mimeTypes.length() != ids.length()) {
+            call.reject("Category, file IDs and MIME types are required");
+            return;
+        }
+
+        try {
+            java.util.ArrayList<Uri> uris = new java.util.ArrayList<>();
+            String mimeType = mimeTypes.getString(0);
+            if (mimeType.isEmpty()) mimeType = "*/*";
+            for (int i = 0; i < ids.length(); i++) {
+                uris.add(android.content.ContentUris.withAppendedId(collection, Long.parseLong(ids.getString(i))));
+                if (!mimeType.equals(mimeTypes.getString(i))) mimeType = "*/*";
+            }
+            Intent intent = new Intent(uris.size() == 1 ? Intent.ACTION_SEND : Intent.ACTION_SEND_MULTIPLE);
+            intent.setType(mimeType);
+            if (uris.size() == 1) {
+                intent.putExtra(Intent.EXTRA_STREAM, uris.get(0));
+            } else {
+                intent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+            }
+            ClipData clip = ClipData.newRawUri("Shared file", uris.get(0));
+            for (int i = 1; i < uris.size(); i++) clip.addItem(new ClipData.Item(uris.get(i)));
+            intent.setClipData(clip);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            getActivity().startActivity(Intent.createChooser(intent, "Share files"));
+            call.resolve();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to share files", e);
+            call.reject("Failed to share files", e);
+        }
+    }
+
+    @PluginMethod
     public void getFilesByCategory(PluginCall call) {
         String category = call.getString("category", "");
         Integer limit = call.getInt("limit", 10000); // Default limit 10000 files to show all content
@@ -452,6 +492,7 @@ public class StorageStatsPlugin extends Plugin {
                         long id = cursor.getLong(idColumn);
                         
                         fileObj.put("id", String.valueOf(id));
+                        fileObj.put("uri", android.content.ContentUris.withAppendedId(contentUri, id).toString());
                         fileObj.put("name", cursor.getString(nameColumn));
                         fileObj.put("path", cursor.getString(dataColumn));
                         fileObj.put("size", cursor.getLong(sizeColumn));

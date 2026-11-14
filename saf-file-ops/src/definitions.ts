@@ -25,4 +25,13 @@ export interface SafFileOpsPlugin {
   listFolder(options: { uri: string }): Promise<{ items: SafFileItem[] }>;
   getPersistedRoot(options?: { key?: string }): Promise<SafRoot | null>;
   persistRoot(options: { uri: string; name: string; key?: string }): Promise<void>;
+  renameMedia(options: { uri: string; name: string; newName: string }): Promise<void>;
+  deleteMedia(options: { uri: string; name: string }): Promise<void>;
+  transferMedia(options: {
+    uri: string;
+    name: string;
+    targetUri: string;
+    existingUri?: string;
+    move: boolean;
+  }): Promise<void>;
 }

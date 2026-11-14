@@ -19,6 +19,10 @@ import {
   IonItem,
   IonItemOptions,
   IonItemOption,
+  IonCheckbox,
+  IonPopover,
+  IonList,
+  AlertController,
   ToastController,
   IonImg
 } from '@ionic/angular/standalone';
@@ -26,9 +30,11 @@ import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { FilesystemService } from '../core/services/filesystem.service';
 import StorageStats from '../plugins/storage-stats';
+import { SafFileOps } from 'saf-file-ops';
 
 interface FileItem {
   id: string;
+  uri: string;
   name: string;
   path: string;
   size: number;
@@ -72,6 +78,9 @@ type SortOption = 'size' | 'name' | 'date';
     IonItem,
     IonItemOptions,
     IonItemOption,
+    IonCheckbox,
+    IonPopover,
+    IonList,
     IonImg
   ]
 })
@@ -86,6 +95,11 @@ export class CategoryDetailPage implements OnInit {
   hasPermission = signal(false);
   errorMessage = signal<string | null>(null);
   totalFilesInStorage = signal<number>(0);
+  layout = signal<'list' | 'grid'>('list');
+  selectionMode = signal(false);
+  operationBusy = signal(false);
+  selectedIds = signal<Set<string>>(new Set());
+  selectedFiles = computed(() => this.files().filter(file => this.selectedIds().has(file.id)));
 
   
   // Computed signals for derived state
@@ -123,7 +137,8 @@ export class CategoryDetailPage implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private filesystemService: FilesystemService,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
   ) {}
 
   async ngOnInit() {
@@ -225,6 +240,7 @@ export class CategoryDetailPage implements OnInit {
       });
       
       this.files.set(processedFiles);
+      this.clearSelection();
       this.totalFilesInStorage.set(processedFiles.length);
       
       console.log('Total files in storage for', this.categoryType(), ':', filesData.length);
@@ -256,6 +272,33 @@ export class CategoryDetailPage implements OnInit {
   changeSortOption(option: SortOption) {
     this.sortBy.set(option);
     // filteredFiles will automatically recompute
+  }
+
+  clearSelection() {
+    this.selectedIds.set(new Set());
+    this.selectionMode.set(false);
+  }
+
+  toggleSelection(file: FileItem) {
+    if (this.operationBusy()) return;
+    this.selectedIds.update(current => {
+      const selected = new Set(current);
+      if (selected.has(file.id)) {
+        selected.delete(file.id);
+      } else {
+        selected.add(file.id);
+      }
+      return selected;
+    });
+  }
+
+  onFileClick(file: FileItem) {
+    if (this.operationBusy()) return;
+    if (this.selectionMode()) {
+      this.toggleSelection(file);
+    } else {
+      void this.openFile(file);
+    }
   }
 
   formatBytes(bytes: number, decimals = 2): string {
@@ -330,22 +373,146 @@ export class CategoryDetailPage implements OnInit {
   }
 
   async shareFile(file: FileItem) {
-    try {
-      await Haptics.impact({ style: ImpactStyle.Medium });
-    } catch (e) {
-      // Haptics not available
-    }
-    // TODO: Implement file sharing
-    console.log('Sharing file:', file);
+    await this.shareFiles([file]);
   }
 
-  async deleteFile(file: FileItem) {
+  async shareFiles(files: FileItem[]) {
+    if (files.length === 0) return;
     try {
-      await Haptics.impact({ style: ImpactStyle.Heavy });
-    } catch (e) {
-      // Haptics not available
+      await StorageStats.shareFiles({
+        category: this.categoryType(),
+        ids: files.map(file => file.id),
+        mimeTypes: files.map(file => file.mimeType || '*/*')
+      });
+    } catch (error) {
+      console.error('Error sharing files:', error);
+      const toast = await this.toastCtrl.create({
+        message: 'Unable to share the selected files.',
+        duration: 3000,
+        position: 'bottom',
+        color: 'danger'
+      });
+      await toast.present();
     }
-    // TODO: Implement file deletion with confirmation
-    console.log('Deleting file:', file);
+  }
+
+  async renameSelected() {
+    const files = this.selectedFiles();
+    if (this.operationBusy() || files.length !== 1) return;
+    this.operationBusy.set(true);
+    let attempted = false;
+    try {
+      const file = files[0];
+      const alert = await this.alertCtrl.create({
+        header: 'Rename file',
+        inputs: [{ name: 'name', type: 'text', value: file.name, placeholder: 'File name' }],
+        buttons: [{ text: 'Cancel', role: 'cancel' }, { text: 'Rename', role: 'confirm' }]
+      });
+      await alert.present();
+      const result = await alert.onDidDismiss<{ values?: { name?: string } }>();
+      if (result.role !== 'confirm') return;
+      const newName = result.data?.values?.name;
+      if (!newName || !newName.trim()) throw new Error('Enter a valid file name.');
+      if (newName === file.name) return;
+      attempted = true;
+      await SafFileOps.renameMedia({ uri: file.uri, name: file.name, newName });
+      await this.showOperationResult('Rename complete', `Renamed ${file.name} to ${newName}.`);
+    } catch (error) {
+      await this.showOperationResult('Rename failed', this.errorText(error));
+    } finally {
+      if (attempted) await this.loadFiles();
+      this.operationBusy.set(false);
+    }
+  }
+
+  async deleteSelected() {
+    const files = this.selectedFiles();
+    if (this.operationBusy() || files.length === 0) return;
+    this.operationBusy.set(true);
+    let completed = 0;
+    let attempted = false;
+    try {
+      if (!await this.confirmOperation('Delete files?', `Permanently delete ${files.length} selected ${files.length === 1 ? 'file' : 'files'}?`)) return;
+      for (const file of files) {
+        attempted = true;
+        try {
+          await SafFileOps.deleteMedia({ uri: file.uri, name: file.name });
+          completed++;
+        } catch (error) {
+          throw new Error(`${file.name}: ${this.errorText(error)}`);
+        }
+      }
+      await this.showOperationResult('Delete complete', `Deleted ${completed} ${completed === 1 ? 'file' : 'files'}.`);
+    } catch (error) {
+      await this.showOperationResult('Delete stopped', `${completed} of ${files.length} completed. ${this.errorText(error)}`);
+    } finally {
+      if (attempted) await this.loadFiles();
+      this.operationBusy.set(false);
+    }
+  }
+
+  async transferSelected(move: boolean) {
+    const files = this.selectedFiles();
+    if (this.operationBusy() || files.length === 0) return;
+    this.operationBusy.set(true);
+    let completed = 0;
+    let attempted = false;
+    try {
+      if (new Set(files.map(file => file.name)).size !== files.length) {
+        throw new Error('The selection contains files with the same name. Transfer them separately.');
+      }
+      let destination;
+      try {
+        destination = await SafFileOps.pickRoot();
+      } catch (error) {
+        if (this.errorText(error) === 'Picker cancelled') return;
+        throw error;
+      }
+      const { items } = await SafFileOps.listFolder({ uri: destination.uri });
+      const collisions = files.filter(file => items.some(item => item.name === file.name));
+      if (collisions.length > 0) {
+        const names = collisions.map(file => file.name).join(', ');
+        if (!await this.confirmOperation('Replace existing files?', `The destination contains: ${names}. Replace them?`)) return;
+      }
+      for (const file of files) {
+        attempted = true;
+        try {
+          await SafFileOps.transferMedia({
+            uri: file.uri,
+            name: file.name,
+            targetUri: destination.uri,
+            existingUri: items.find(item => item.name === file.name)?.uri,
+            move
+          });
+          completed++;
+        } catch (error) {
+          throw new Error(`${file.name}: ${this.errorText(error)}`);
+        }
+      }
+      await this.showOperationResult(move ? 'Move complete' : 'Copy complete', `${completed} ${completed === 1 ? 'file' : 'files'} ${move ? 'moved' : 'copied'}.`);
+    } catch (error) {
+      await this.showOperationResult(move ? 'Move stopped' : 'Copy stopped', `${completed} of ${files.length} completed. ${this.errorText(error)}`);
+    } finally {
+      if (attempted) await this.loadFiles();
+      this.operationBusy.set(false);
+    }
+  }
+
+  private errorText(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  private async confirmOperation(header: string, message: string): Promise<boolean> {
+    const alert = await this.alertCtrl.create({
+      header, message,
+      buttons: [{ text: 'Cancel', role: 'cancel' }, { text: 'Confirm', role: 'confirm' }]
+    });
+    await alert.present();
+    return (await alert.onDidDismiss()).role === 'confirm';
+  }
+
+  private async showOperationResult(header: string, message: string) {
+    const alert = await this.alertCtrl.create({ header, message, buttons: ['OK'] });
+    await alert.present();
   }
 }
