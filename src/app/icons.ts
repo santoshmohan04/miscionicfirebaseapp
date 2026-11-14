@@ -23,7 +23,10 @@ import {
   refreshOutline,
   serverOutline,
   albumsOutline,
-  folderOpenOutline
+  folderOpenOutline,
+  checkmarkCircle,
+  checkmark,
+  ellipsisVertical
 } from 'ionicons/icons';
 
 /**
@@ -55,6 +58,9 @@ export const registerIcons = () => {
     refreshOutline,
     serverOutline,
     albumsOutline,
-    folderOpenOutline
+    folderOpenOutline,
+    checkmarkCircle,
+    checkmark,
+    ellipsisVertical
   });
 };

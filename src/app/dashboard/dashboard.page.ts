@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, PopoverController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
+import { PopoverController } from '@ionic/angular/standalone';
 import { RouterModule } from '@angular/router';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
@@ -281,14 +282,9 @@ export class DashboardPage implements OnInit, OnDestroy {
 
   async openThemeSelectorWithHaptics(event: Event) {
     console.log('[Dashboard] openThemeSelectorWithHaptics called.');
-    // Provide haptic feedback for a better user experience on physical devices
-    try {
-      await Haptics.impact({ style: ImpactStyle.Light });
-      console.log('[Dashboard] Haptic impact success.');
-    } catch (e) {
-      // Haptics not available or failed
-      console.warn('Haptics impact failed', e);
-    }
+    void Haptics.impact({ style: ImpactStyle.Light }).catch((error) => {
+      console.warn('Haptics impact failed', error);
+    });
     await this.openThemeSelector(event);
   }
 

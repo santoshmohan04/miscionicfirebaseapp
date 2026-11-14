@@ -25,6 +25,52 @@ class SafFileOpsPlugin : Plugin() {
         private const val PICK_ROOT_REQUEST = "pickRootResult"
     }
 
+    @PluginMethod
+    fun renameMedia(call: PluginCall) {
+        try {
+            MediaFileOperations(context).rename(
+                requireArgument(call, "uri"),
+                requireArgument(call, "name"),
+                requireArgument(call, "newName")
+            )
+            call.resolve()
+        } catch (e: Exception) {
+            call.reject(e.message ?: "Unable to rename file", e)
+        }
+    }
+
+    @PluginMethod
+    fun deleteMedia(call: PluginCall) {
+        try {
+            MediaFileOperations(context).delete(
+                requireArgument(call, "uri"),
+                requireArgument(call, "name")
+            )
+            call.resolve()
+        } catch (e: Exception) {
+            call.reject(e.message ?: "Unable to delete file", e)
+        }
+    }
+
+    @PluginMethod
+    fun transferMedia(call: PluginCall) {
+        try {
+            MediaFileOperations(context).transfer(
+                requireArgument(call, "uri"),
+                requireArgument(call, "name"),
+                requireArgument(call, "targetUri"),
+                call.getString("existingUri"),
+                call.getBoolean("move") ?: throw IOException("Transfer mode is required")
+            )
+            call.resolve()
+        } catch (e: Exception) {
+            call.reject(e.message ?: "Unable to transfer file", e)
+        }
+    }
+
+    private fun requireArgument(call: PluginCall, name: String): String =
+        call.getString(name)?.takeIf { it.isNotBlank() } ?: throw IOException("$name is required")
+
     /* =========================
        DELETE
        ========================= */

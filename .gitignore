@@ -75,6 +75,7 @@ saf-file-ops/android/app/build/
 saf-file-ops/ios/Pods/
 saf-file-ops/ios/build/
 saf-file-ops/*.log
+/saf-picker/node_modules/
 
 # Firebase & Android sensitive files
 android/app/google-services.json

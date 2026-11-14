@@ -77,8 +77,15 @@ The category page in [src/app/category-detail/category-detail.page.ts](src/app/c
 - permission checks
 - category file loading through the filesystem service
 - sorting by size, names, or date
+- list and grid views, single/multiple selection, and sharing
+- rename (one file), delete, copy, and move for selected Android category files
 - metadata formatting and file icons
 - basic error state handling
+
+Copy and move use the Android folder picker and ask before replacing existing
+files. Renaming refuses an existing name. Android 11 and later require All files
+access for rename, delete, and move. Transfers stop and report partial results
+when the destination provider cannot safely verify or replace a file.
 
 ### Storage Access Framework integration
 The service layer in [src/app/core/services/filesystem.service.ts](src/app/core/services/filesystem.service.ts) implements:
